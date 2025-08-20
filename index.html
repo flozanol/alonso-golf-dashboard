@@ -359,7 +359,7 @@
             display: inline-flex;
             align-items: center;
             gap: 5px;
-            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            background: linear-gradient(135deg, #6c5ce7, #a29bfe);
             color: white;
             padding: 5px 10px;
             border-radius: 15px;
@@ -657,7 +657,6 @@
         let rondas = [];
         let metas = {};
         const userId = 'alonso';
-        let firebaseReady = false;
 
         // Function to update connection status
         function updateConnectionStatus(message, type) {
@@ -1473,7 +1472,11 @@
         }
     </script>
 </body>
-</html>
+</html>Putts += hoyo.putts || 0;
+                        if (hoyo.updown) totalUpDown++;
+                    });
+                }
+            });
 
             const promedioScore = (totalScore / totalRondas).toFixed(1);
             const porcentajeFairways = totalFairwaysPosibles > 0 ? ((totalFairwaysAcertados / totalFairwaysPosibles) * 100).toFixed(1) : 0;
@@ -1651,3 +1654,5 @@
                             totalFairwaysPosibles++;
                             if (hoyo.fairway) totalFairwaysAcertados++;
                         }
+                        if (hoyo.gir) totalGIR++;
+                        total
