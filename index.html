@@ -1,0 +1,1181 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Golf Stats Pro - Dashboard de Alonso</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .header h1 {
+            color: #1e3c72;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .tabs {
+            display: flex;
+            background: white;
+            border-radius: 15px;
+            padding: 5px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+
+        .tab {
+            flex: 1;
+            padding: 15px;
+            text-align: center;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+
+        .tab.active {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+        }
+
+        .tab:hover:not(.active) {
+            background: #f0f0f0;
+        }
+
+        .content {
+            display: none;
+        }
+
+        .content.active {
+            display: block;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #1e3c72;
+        }
+
+        .form-group input, .form-group select, .form-group textarea {
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: #2a5298;
+        }
+
+        .holes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .hole-card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+        }
+
+        .hole-card h4 {
+            text-align: center;
+            margin-bottom: 10px;
+            color: #1e3c72;
+        }
+
+        .hole-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .hole-stat {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .hole-stat label {
+            font-size: 12px;
+            margin-bottom: 5px;
+            color: #666;
+        }
+
+        .hole-stat input {
+            width: 60px;
+            padding: 5px;
+            text-align: center;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: transform 0.3s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+        }
+
+        .stats-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .rounds-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .round-item {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-left: 5px solid #1e3c72;
+        }
+
+        .round-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .round-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 10px;
+            font-size: 14px;
+        }
+
+        .photo-upload {
+            border: 2px dashed #ddd;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color 0.3s ease;
+        }
+
+        .photo-upload:hover {
+            border-color: #2a5298;
+        }
+
+        .photo-preview {
+            max-width: 200px;
+            max-height: 150px;
+            border-radius: 10px;
+            margin-top: 10px;
+        }
+
+        .tournament-badge {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .progress-bar {
+            background: #e0e0e0;
+            border-radius: 10px;
+            height: 20px;
+            margin: 5px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #28a745, #20c997);
+            border-radius: 10px;
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 12px;
+        }
+
+        .progress-fill.red {
+            background: linear-gradient(135deg, #dc3545, #c82333);
+        }
+
+        .progress-fill.yellow {
+            background: linear-gradient(135deg, #ffc107, #e0a800);
+            color: #333;
+        }
+
+        .meta-card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-left: 5px solid #1e3c72;
+        }
+
+        .meta-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .meta-status {
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .meta-status.alcanzado {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .meta-status.progreso {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .meta-status.pendiente {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        @media (max-width: 768px) {
+            .tabs {
+                flex-direction: column;
+            }
+            
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .holes-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏌️‍♂️ Golf Stats Pro</h1>
+            <p>Dashboard de Estadísticas de Golf - Alonso</p>
+        </div>
+
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('nueva-ronda')">Nueva Ronda</div>
+            <div class="tab" onclick="switchTab('estadisticas')">Estadísticas</div>
+            <div class="tab" onclick="switchTab('graficos')">Gráficos</div>
+            <div class="tab" onclick="switchTab('metas')">Metas</div>
+            <div class="tab" onclick="switchTab('historial')">Historial</div>
+        </div>
+
+        <!-- Nueva Ronda -->
+        <div id="nueva-ronda" class="content active">
+            <div class="card">
+                <h2>🆕 Registrar Nueva Ronda</h2>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Fecha</label>
+                        <input type="date" id="fecha" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Campo de Golf</label>
+                        <input type="text" id="campo" placeholder="Nombre del campo" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Tipo de Ronda</label>
+                        <select id="tipo">
+                            <option value="practica">Práctica</option>
+                            <option value="torneo">Torneo</option>
+                            <option value="competencia">Competencia</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Score Total</label>
+                        <input type="number" id="score" placeholder="Ej: 72" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Enlace a Resultados (opcional)</label>
+                    <input type="url" id="enlace" placeholder="https://resultados-torneo.com">
+                </div>
+
+                <div class="form-group">
+                    <label>Foto del Scorecard</label>
+                    <div class="photo-upload" onclick="document.getElementById('foto').click()">
+                        <div>📷 Subir foto del scorecard</div>
+                        <input type="file" id="foto" accept="image/*" style="display:none" onchange="previewPhoto(this)">
+                        <img id="photo-preview" class="photo-preview" style="display:none">
+                    </div>
+                </div>
+
+                <h3>📊 Estadísticas por Hoyo</h3>
+                <div class="holes-grid" id="holes-grid">
+                    <!-- Los hoyos se generarán dinámicamente -->
+                </div>
+
+                <div style="text-align: center; margin-top: 30px;">
+                    <button class="btn" onclick="guardarRonda()">💾 Guardar Ronda</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Estadísticas -->
+        <div id="estadisticas" class="content">
+            <div class="card">
+                <h2>📈 Estadísticas Generales</h2>
+                <div class="stats-summary" id="stats-summary">
+                    <!-- Las estadísticas se generarán dinámicamente -->
+                </div>
+                
+                <div style="text-align: center; margin-top: 20px;">
+                    <button class="btn" onclick="exportarDatos()">📤 Exportar Datos para Coach</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gráficos -->
+        <div id="graficos" class="content">
+            <div class="card">
+                <h2>📊 Tendencias de Progreso</h2>
+                <div style="margin-bottom: 20px;">
+                    <label style="margin-right: 10px;">Mostrar últimas:</label>
+                    <select id="periodFilter" onchange="actualizarGraficos()">
+                        <option value="5">5 rondas</option>
+                        <option value="10">10 rondas</option>
+                        <option value="20">20 rondas</option>
+                        <option value="all">Todas las rondas</option>
+                    </select>
+                </div>
+                <canvas id="scoreChart" width="800" height="400" style="max-width: 100%; margin-bottom: 30px;"></canvas>
+                <canvas id="statsChart" width="800" height="400" style="max-width: 100%;"></canvas>
+            </div>
+        </div>
+
+        <!-- Metas -->
+        <div id="metas" class="content">
+            <div class="card">
+                <h2>🎯 Metas y Objetivos</h2>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Meta de Score Promedio</label>
+                        <input type="number" id="metaScore" placeholder="Ej: 75">
+                    </div>
+                    <div class="form-group">
+                        <label>Meta de Fairways (%)</label>
+                        <input type="number" id="metaFairways" placeholder="Ej: 70" max="100">
+                    </div>
+                    <div class="form-group">
+                        <label>Meta de GIR (%)</label>
+                        <input type="number" id="metaGIR" placeholder="Ej: 60" max="100">
+                    </div>
+                    <div class="form-group">
+                        <label>Meta de Putts por Hoyo</label>
+                        <input type="number" id="metaPutts" placeholder="Ej: 1.8" step="0.1">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Objetivo Principal del Mes</label>
+                    <textarea id="objetivoMes" rows="3" placeholder="Describe tu objetivo principal para este mes..."></textarea>
+                </div>
+                
+                <div style="text-align: center; margin: 20px 0;">
+                    <button class="btn" onclick="guardarMetas()">💾 Guardar Metas</button>
+                </div>
+                
+                <div id="progreso-metas">
+                    <!-- El progreso se mostrará aquí -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Estadísticas -->
+        <div id="estadisticas" class="content">
+            <div class="card">
+                <h2>📈 Estadísticas Generales</h2>
+                <div class="stats-summary" id="stats-summary">
+                    <!-- Las estadísticas se generarán dinámicamente -->
+                </div>
+                
+                <div style="text-align: center; margin-top: 20px;">
+                    <button class="btn" onclick="exportarDatos()">📤 Exportar Datos para Coach</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>📊 Tendencias</h2>
+                <canvas id="trendsChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+
+        <!-- Historial -->
+        <div id="historial" class="content">
+            <div class="card">
+                <h2>📋 Historial de Rondas</h2>
+                <div class="rounds-list" id="rounds-list">
+                    <!-- El historial se generará dinámicamente -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script>
+        // Variables globales
+        let rondas = JSON.parse(localStorage.getItem('golfRondas')) || [];
+        let metas = JSON.parse(localStorage.getItem('golfMetas')) || {};
+        let scoreChart, statsChart;
+        
+        // Inicializar la aplicación
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('fecha').value = new Date().toISOString().split('T')[0];
+            generarHoyos();
+            actualizarEstadisticas();
+            mostrarHistorial();
+            cargarMetas();
+            actualizarProgresoMetas();
+        });
+
+        function switchTab(tabName) {
+            // Ocultar todos los contenidos
+            document.querySelectorAll('.content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Remover clase active de todas las tabs
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Mostrar contenido seleccionado
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+            
+            // Actualizar datos si es necesario
+            if (tabName === 'estadisticas') {
+                actualizarEstadisticas();
+            } else if (tabName === 'historial') {
+                mostrarHistorial();
+            } else if (tabName === 'graficos') {
+                actualizarGraficos();
+            } else if (tabName === 'metas') {
+                actualizarProgresoMetas();
+            }
+        }
+
+        function generarHoyos() {
+            const holesGrid = document.getElementById('holes-grid');
+            holesGrid.innerHTML = '';
+            
+            for (let i = 1; i <= 18; i++) {
+                const holeCard = document.createElement('div');
+                holeCard.className = 'hole-card';
+                holeCard.innerHTML = `
+                    <h4>Hoyo ${i}</h4>
+                    <div class="hole-stats">
+                        <div class="hole-stat">
+                            <label>Fairway</label>
+                            <input type="checkbox" id="fairway-${i}">
+                        </div>
+                        <div class="hole-stat">
+                            <label>GIR</label>
+                            <input type="checkbox" id="gir-${i}">
+                        </div>
+                        <div class="hole-stat">
+                            <label>Putts</label>
+                            <input type="number" id="putts-${i}" min="1" max="5" value="2">
+                        </div>
+                        <div class="hole-stat">
+                            <label>U&D</label>
+                            <input type="checkbox" id="updown-${i}">
+                        </div>
+                    </div>
+                `;
+                holesGrid.appendChild(holeCard);
+            }
+        }
+
+        function previewPhoto(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const preview = document.getElementById('photo-preview');
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function guardarRonda() {
+            const fecha = document.getElementById('fecha').value;
+            const campo = document.getElementById('campo').value;
+            const tipo = document.getElementById('tipo').value;
+            const score = parseInt(document.getElementById('score').value);
+            const enlace = document.getElementById('enlace').value;
+            
+            if (!fecha || !campo || !score) {
+                alert('Por favor completa los campos obligatorios');
+                return;
+            }
+
+            const ronda = {
+                id: Date.now(),
+                fecha,
+                campo,
+                tipo,
+                score,
+                enlace,
+                hoyos: []
+            };
+
+            // Recopilar datos de cada hoyo
+            for (let i = 1; i <= 18; i++) {
+                const fairway = document.getElementById(`fairway-${i}`).checked;
+                const gir = document.getElementById(`gir-${i}`).checked;
+                const putts = parseInt(document.getElementById(`putts-${i}`).value) || 2;
+                const updown = document.getElementById(`updown-${i}`).checked;
+
+                ronda.hoyos.push({
+                    hoyo: i,
+                    fairway,
+                    gir,
+                    putts,
+                    updown
+                });
+            }
+
+            // Guardar la foto si existe
+            const fotoInput = document.getElementById('foto');
+            if (fotoInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    ronda.foto = e.target.result;
+                    completarGuardado(ronda);
+                };
+                reader.readAsDataURL(fotoInput.files[0]);
+            } else {
+                completarGuardado(ronda);
+            }
+        }
+
+        function completarGuardado(ronda) {
+            rondas.push(ronda);
+            localStorage.setItem('golfRondas', JSON.stringify(rondas));
+            
+            alert('¡Ronda guardada exitosamente! 🎉');
+            limpiarFormulario();
+        }
+
+        function limpiarFormulario() {
+            document.getElementById('campo').value = '';
+            document.getElementById('score').value = '';
+            document.getElementById('enlace').value = '';
+            document.getElementById('foto').value = '';
+            document.getElementById('photo-preview').style.display = 'none';
+            
+            // Limpiar hoyos
+            for (let i = 1; i <= 18; i++) {
+                document.getElementById(`fairway-${i}`).checked = false;
+                document.getElementById(`gir-${i}`).checked = false;
+                document.getElementById(`putts-${i}`).value = 2;
+                document.getElementById(`updown-${i}`).checked = false;
+            }
+        }
+
+        function actualizarEstadisticas() {
+            if (rondas.length === 0) {
+                document.getElementById('stats-summary').innerHTML = '<p>No hay rondas registradas aún.</p>';
+                return;
+            }
+
+            const totalRondas = rondas.length;
+            const totalHoyos = totalRondas * 18;
+            
+            let totalFairways = 0;
+            let totalGIR = 0;
+            let totalPutts = 0;
+            let totalUpDown = 0;
+            let totalScore = 0;
+
+            rondas.forEach(ronda => {
+                totalScore += ronda.score;
+                ronda.hoyos.forEach(hoyo => {
+                    if (hoyo.fairway) totalFairways++;
+                    if (hoyo.gir) totalGIR++;
+                    totalPutts += hoyo.putts;
+                    if (hoyo.updown) totalUpDown++;
+                });
+            });
+
+            const promedioScore = (totalScore / totalRondas).toFixed(1);
+            const porcentajeFairways = ((totalFairways / totalHoyos) * 100).toFixed(1);
+            const porcentajeGIR = ((totalGIR / totalHoyos) * 100).toFixed(1);
+            const promedioPutts = (totalPutts / totalHoyos).toFixed(1);
+            const porcentajeUpDown = ((totalUpDown / totalHoyos) * 100).toFixed(1);
+
+            document.getElementById('stats-summary').innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-value">${promedioScore}</div>
+                    <div class="stat-label">Score Promedio</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${porcentajeFairways}%</div>
+                    <div class="stat-label">Fairways</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${porcentajeGIR}%</div>
+                    <div class="stat-label">GIR</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${promedioPutts}</div>
+                    <div class="stat-label">Putts por Hoyo</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${porcentajeUpDown}%</div>
+                    <div class="stat-label">Up & Down</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${totalRondas}</div>
+                    <div class="stat-label">Rondas Jugadas</div>
+                </div>
+            `;
+        }
+
+        function mostrarHistorial() {
+            const roundsList = document.getElementById('rounds-list');
+            
+            if (rondas.length === 0) {
+                roundsList.innerHTML = '<p>No hay rondas registradas aún.</p>';
+                return;
+            }
+
+            roundsList.innerHTML = '';
+            
+            // Ordenar rondas por fecha (más reciente primero)
+            const rondasOrdenadas = [...rondas].sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+            
+            rondasOrdenadas.forEach(ronda => {
+                const fairways = ronda.hoyos.filter(h => h.fairway).length;
+                const girs = ronda.hoyos.filter(h => h.gir).length;
+                const putts = ronda.hoyos.reduce((sum, h) => sum + h.putts, 0);
+                const updowns = ronda.hoyos.filter(h => h.updown).length;
+
+                const roundItem = document.createElement('div');
+                roundItem.className = 'round-item';
+                roundItem.innerHTML = `
+                    <div class="round-header">
+                        <div>
+                            <strong>${new Date(ronda.fecha).toLocaleDateString('es-ES')}</strong> - ${ronda.campo}
+                            ${ronda.tipo === 'torneo' ? '<span class="tournament-badge">TORNEO</span>' : ''}
+                        </div>
+                        <div style="font-size: 1.5em; font-weight: bold; color: #1e3c72;">
+                            ${ronda.score}
+                        </div>
+                    </div>
+                    <div class="round-stats">
+                        <div><strong>Fairways:</strong> ${fairways}/18 (${((fairways/18)*100).toFixed(1)}%)</div>
+                        <div><strong>GIR:</strong> ${girs}/18 (${((girs/18)*100).toFixed(1)}%)</div>
+                        <div><strong>Putts:</strong> ${putts} (${(putts/18).toFixed(1)} promedio)</div>
+                        <div><strong>Up & Down:</strong> ${updowns}/18 (${((updowns/18)*100).toFixed(1)}%)</div>
+                    </div>
+                    ${ronda.enlace ? `<div style="margin-top: 10px;"><a href="${ronda.enlace}" target="_blank">🔗 Ver resultados completos</a></div>` : ''}
+                    ${ronda.foto ? `<div style="margin-top: 10px;"><img src="${ronda.foto}" style="max-width: 200px; border-radius: 5px; cursor: pointer;" onclick="mostrarFoto('${ronda.foto}')"></div>` : ''}
+                `;
+                roundsList.appendChild(roundItem);
+            });
+        }
+
+        function mostrarFoto(src) {
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+                background: rgba(0,0,0,0.8); display: flex; justify-content: center; 
+                align-items: center; z-index: 1000; cursor: pointer;
+            `;
+            modal.innerHTML = `<img src="${src}" style="max-width: 90%; max-height: 90%; border-radius: 10px;">`;
+            modal.onclick = () => document.body.removeChild(modal);
+            document.body.appendChild(modal);
+        }
+
+        // Funciones para gráficos
+        function actualizarGraficos() {
+            if (rondas.length === 0) return;
+
+            const period = document.getElementById('periodFilter').value;
+            let rondasFiltradas = [...rondas].sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+            
+            if (period !== 'all') {
+                rondasFiltradas = rondasFiltradas.slice(-parseInt(period));
+            }
+
+            // Destruir gráficos existentes
+            if (scoreChart) scoreChart.destroy();
+            if (statsChart) statsChart.destroy();
+
+            // Gráfico de Score
+            const scoreCtx = document.getElementById('scoreChart').getContext('2d');
+            scoreChart = new Chart(scoreCtx, {
+                type: 'line',
+                data: {
+                    labels: rondasFiltradas.map(r => new Date(r.fecha).toLocaleDateString('es-ES')),
+                    datasets: [{
+                        label: 'Score',
+                        data: rondasFiltradas.map(r => r.score),
+                        borderColor: '#1e3c72',
+                        backgroundColor: 'rgba(30, 60, 114, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Evolución del Score'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            reverse: true // Score más bajo es mejor
+                        }
+                    }
+                }
+            });
+
+            // Gráfico de estadísticas
+            const statsCtx = document.getElementById('statsChart').getContext('2d');
+            
+            const fairwayData = rondasFiltradas.map(r => {
+                const fairways = r.hoyos.filter(h => h.fairway).length;
+                return (fairways / 18 * 100).toFixed(1);
+            });
+            
+            const girData = rondasFiltradas.map(r => {
+                const girs = r.hoyos.filter(h => h.gir).length;
+                return (girs / 18 * 100).toFixed(1);
+            });
+
+            const puttsData = rondasFiltradas.map(r => {
+                const putts = r.hoyos.reduce((sum, h) => sum + h.putts, 0);
+                return (putts / 18).toFixed(1);
+            });
+
+            statsChart = new Chart(statsCtx, {
+                type: 'line',
+                data: {
+                    labels: rondasFiltradas.map(r => new Date(r.fecha).toLocaleDateString('es-ES')),
+                    datasets: [{
+                        label: 'Fairways (%)',
+                        data: fairwayData,
+                        borderColor: '#28a745',
+                        backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                        yAxisID: 'y'
+                    }, {
+                        label: 'GIR (%)',
+                        data: girData,
+                        borderColor: '#17a2b8',
+                        backgroundColor: 'rgba(23, 162, 184, 0.1)',
+                        yAxisID: 'y'
+                    }, {
+                        label: 'Putts por hoyo',
+                        data: puttsData,
+                        borderColor: '#ffc107',
+                        backgroundColor: 'rgba(255, 193, 7, 0.1)',
+                        yAxisID: 'y1'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Evolución de Estadísticas Clave'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: {
+                                display: true,
+                                text: 'Porcentaje (%)'
+                            }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            title: {
+                                display: true,
+                                text: 'Putts por hoyo'
+                            },
+                            grid: {
+                                drawOnChartArea: false,
+                            },
+                        }
+                    }
+                }
+            });
+        }
+
+        // Funciones para metas
+        function guardarMetas() {
+            metas = {
+                score: parseFloat(document.getElementById('metaScore').value) || null,
+                fairways: parseFloat(document.getElementById('metaFairways').value) || null,
+                gir: parseFloat(document.getElementById('metaGIR').value) || null,
+                putts: parseFloat(document.getElementById('metaPutts').value) || null,
+                objetivo: document.getElementById('objetivoMes').value || ''
+            };
+            
+            localStorage.setItem('golfMetas', JSON.stringify(metas));
+            alert('¡Metas guardadas exitosamente! 🎯');
+            actualizarProgresoMetas();
+        }
+
+        function cargarMetas() {
+            if (metas.score) document.getElementById('metaScore').value = metas.score;
+            if (metas.fairways) document.getElementById('metaFairways').value = metas.fairways;
+            if (metas.gir) document.getElementById('metaGIR').value = metas.gir;
+            if (metas.putts) document.getElementById('metaPutts').value = metas.putts;
+            if (metas.objetivo) document.getElementById('objetivoMes').value = metas.objetivo;
+        }
+
+        function actualizarProgresoMetas() {
+            const progresoDiv = document.getElementById('progreso-metas');
+            
+            if (Object.keys(metas).length === 0 || rondas.length === 0) {
+                progresoDiv.innerHTML = '<p>Define tus metas para ver tu progreso.</p>';
+                return;
+            }
+
+            // Calcular estadísticas actuales
+            const totalRondas = rondas.length;
+            const totalHoyos = totalRondas * 18;
+            
+            let totalFairways = 0;
+            let totalGIR = 0;
+            let totalPutts = 0;
+            let totalScore = 0;
+
+            rondas.forEach(ronda => {
+                totalScore += ronda.score;
+                ronda.hoyos.forEach(hoyo => {
+                    if (hoyo.fairway) totalFairways++;
+                    if (hoyo.gir) totalGIR++;
+                    totalPutts += hoyo.putts;
+                });
+            });
+
+            const promedioScore = totalScore / totalRondas;
+            const porcentajeFairways = (totalFairways / totalHoyos) * 100;
+            const porcentajeGIR = (totalGIR / totalHoyos) * 100;
+            const promedioPutts = totalPutts / totalHoyos;
+
+            let html = '<h3>🏆 Progreso hacia las Metas</h3>';
+
+            // Score
+            if (metas.score) {
+                const progreso = Math.min(100, Math.max(0, ((metas.score + 10 - promedioScore) / 10) * 100));
+                const status = promedioScore <= metas.score ? 'alcanzado' : 
+                             promedioScore <= metas.score + 3 ? 'progreso' : 'pendiente';
+                
+                html += `
+                    <div class="meta-card">
+                        <div class="meta-header">
+                            <strong>Score Promedio</strong>
+                            <span class="meta-status ${status}">
+                                ${promedioScore.toFixed(1)} / ${metas.score}
+                            </span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill ${status === 'pendiente' ? 'red' : status === 'progreso' ? 'yellow' : ''}" 
+                                 style="width: ${progreso}%">
+                                ${progreso.toFixed(0)}%
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Fairways
+            if (metas.fairways) {
+                const progreso = Math.min(100, (porcentajeFairways / metas.fairways) * 100);
+                const status = porcentajeFairways >= metas.fairways ? 'alcanzado' : 
+                             porcentajeFairways >= metas.fairways * 0.8 ? 'progreso' : 'pendiente';
+                
+                html += `
+                    <div class="meta-card">
+                        <div class="meta-header">
+                            <strong>Fairways</strong>
+                            <span class="meta-status ${status}">
+                                ${porcentajeFairways.toFixed(1)}% / ${metas.fairways}%
+                            </span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill ${status === 'pendiente' ? 'red' : status === 'progreso' ? 'yellow' : ''}" 
+                                 style="width: ${progreso}%">
+                                ${progreso.toFixed(0)}%
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // GIR
+            if (metas.gir) {
+                const progreso = Math.min(100, (porcentajeGIR / metas.gir) * 100);
+                const status = porcentajeGIR >= metas.gir ? 'alcanzado' : 
+                             porcentajeGIR >= metas.gir * 0.8 ? 'progreso' : 'pendiente';
+                
+                html += `
+                    <div class="meta-card">
+                        <div class="meta-header">
+                            <strong>Green in Regulation</strong>
+                            <span class="meta-status ${status}">
+                                ${porcentajeGIR.toFixed(1)}% / ${metas.gir}%
+                            </span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill ${status === 'pendiente' ? 'red' : status === 'progreso' ? 'yellow' : ''}" 
+                                 style="width: ${progreso}%">
+                                ${progreso.toFixed(0)}%
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Putts
+            if (metas.putts) {
+                const progreso = Math.min(100, Math.max(0, ((3 - promedioPutts) / (3 - metas.putts)) * 100));
+                const status = promedioPutts <= metas.putts ? 'alcanzado' : 
+                             promedioPutts <= metas.putts + 0.2 ? 'progreso' : 'pendiente';
+                
+                html += `
+                    <div class="meta-card">
+                        <div class="meta-header">
+                            <strong>Putts por Hoyo</strong>
+                            <span class="meta-status ${status}">
+                                ${promedioPutts.toFixed(2)} / ${metas.putts}
+                            </span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill ${status === 'pendiente' ? 'red' : status === 'progreso' ? 'yellow' : ''}" 
+                                 style="width: ${progreso}%">
+                                ${progreso.toFixed(0)}%
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Objetivo del mes
+            if (metas.objetivo) {
+                html += `
+                    <div class="meta-card">
+                        <h4>🎯 Objetivo del Mes</h4>
+                        <p>${metas.objetivo}</p>
+                    </div>
+                `;
+            }
+
+            progresoDiv.innerHTML = html;
+        }
+
+        // Función para exportar datos
+        function exportarDatos() {
+            if (rondas.length === 0) {
+                alert('No hay datos para exportar');
+                return;
+            }
+
+            // Crear reporte completo
+            let reporte = `REPORTE DE GOLF - ALONSO\n`;
+            reporte += `Generado: ${new Date().toLocaleDateString('es-ES')}\n`;
+            reporte += `=====================================\n\n`;
+
+            // Estadísticas generales
+            const totalRondas = rondas.length;
+            const totalHoyos = totalRondas * 18;
+            
+            let totalFairways = 0;
+            let totalGIR = 0;
+            let totalPutts = 0;
+            let totalUpDown = 0;
+            let totalScore = 0;
+
+            rondas.forEach(ronda => {
+                totalScore += ronda.score;
+                ronda.hoyos.forEach(hoyo => {
+                    if (hoyo.fairway) totalFairways++;
+                    if (hoyo.gir) totalGIR++;
+                    totalPutts += hoyo.putts;
+                    if (hoyo.updown) totalUpDown++;
+                });
+            });
+
+            const promedioScore = (totalScore / totalRondas).toFixed(1);
+            const porcentajeFairways = ((totalFairways / totalHoyos) * 100).toFixed(1);
+            const porcentajeGIR = ((totalGIR / totalHoyos) * 100).toFixed(1);
+            const promedioPutts = (totalPutts / totalHoyos).toFixed(2);
+            const porcentajeUpDown = ((totalUpDown / totalHoyos) * 100).toFixed(1);
+
+            reporte += `ESTADÍSTICAS GENERALES:\n`;
+            reporte += `- Rondas jugadas: ${totalRondas}\n`;
+            reporte += `- Score promedio: ${promedioScore}\n`;
+            reporte += `- Fairways: ${porcentajeFairways}% (${totalFairways}/${totalHoyos})\n`;
+            reporte += `- GIR: ${porcentajeGIR}% (${totalGIR}/${totalHoyos})\n`;
+            reporte += `- Putts por hoyo: ${promedioPutts}\n`;
+            reporte += `- Up & Down: ${porcentajeUpDown}% (${totalUpDown}/${totalHoyos})\n\n`;
+
+            // Metas actuales
+            if (Object.keys(metas).length > 0) {
+                reporte += `METAS ESTABLECIDAS:\n`;
+                if (metas.score) reporte += `- Score objetivo: ${metas.score}\n`;
+                if (metas.fairways) reporte += `- Fairways objetivo: ${metas.fairways}%\n`;
+                if (metas.gir) reporte += `- GIR objetivo: ${metas.gir}%\n`;
+                if (metas.putts) reporte += `- Putts objetivo: ${metas.putts} por hoyo\n`;
+                if (metas.objetivo) reporte += `- Objetivo del mes: ${metas.objetivo}\n`;
+                reporte += `\n`;
+            }
+
+            // Historial detallado
+            reporte += `HISTORIAL DE RONDAS:\n`;
+            reporte += `=====================================\n`;
+            
+            const rondasOrdenadas = [...rondas].sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+            
+            rondasOrdenadas.forEach((ronda, index) => {
+                const fairways = ronda.hoyos.filter(h => h.fairway).length;
+                const girs = ronda.hoyos.filter(h => h.gir).length;
+                const putts = ronda.hoyos.reduce((sum, h) => sum + h.putts, 0);
+                const updowns = ronda.hoyos.filter(h => h.updown).length;
+
+                reporte += `${index + 1}. ${new Date(ronda.fecha).toLocaleDateString('es-ES')} - ${ronda.campo}\n`;
+                reporte += `   Tipo: ${ronda.tipo} | Score: ${ronda.score}\n`;
+                reporte += `   Fairways: ${fairways}/18 (${((fairways/18)*100).toFixed(1)}%)\n`;
+                reporte += `   GIR: ${girs}/18 (${((girs/18)*100).toFixed(1)}%)\n`;
+                reporte += `   Putts: ${putts} (${(putts/18).toFixed(1)} promedio)\n`;
+                reporte += `   Up & Down: ${updowns}/18 (${((updowns/18)*100).toFixed(1)}%)\n`;
+                if (ronda.enlace) reporte += `   Resultados: ${ronda.enlace}\n`;
+                reporte += `\n`;
+            });
+
+            // Crear archivo y descargarlo
+            const blob = new Blob([reporte], { type: 'text/plain;charset=utf-8' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Reporte_Golf_Alonso_${new Date().toISOString().split('T')[0]}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+
+            alert('📤 Reporte exportado exitosamente! El archivo se ha descargado y está listo para enviar al coach.');
+        }
+    </script>
+</body>
+</html>
