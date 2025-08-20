@@ -341,12 +341,7 @@
     <div class="container">
         <div class="header">
             <h1>🏌️‍♂️ Golf Stats Pro</h1>
-            <p>Dashboard de Estadísticas de Golf - Alonso</p>
-            <div style="margin-top: 10px;">
-                <button id="sync-button" class="btn" onclick="intentarReconectar()" style="display: none; font-size: 14px; padding: 8px 16px;">
-                    🔄 Reintentar Conexión
-                </button>
-            </div>
+            <p>Dashboard de Estadísticas de Golf - Alonso (Modo Local)</p>
         </div>
 
         <div class="tabs">
@@ -490,392 +485,32 @@
         </div>
     </div>
 
-    <!-- Solución Simplificada - Firebase via CDN Directo -->
     <script>
-        // Función para cargar Firebase dinámicamente
-        function loadFirebaseBackup() {
-            console.log('🔄 Intentando cargar Firebase desde CDN alternativo...');
-            
-            // Crear elementos script dinámicamente
-            const app = document.createElement('script');
-            app.src = 'https://unpkg.com/firebase@9.22.0/compat/firebase-app.js';
-            app.onload = () => console.log('✅ Firebase App cargado desde unpkg');
-            app.onerror = () => console.log('❌ No se pudo cargar desde unpkg');
-            document.head.appendChild(app);
-            
-            const firestore = document.createElement('script');
-            firestore.src = 'https://unpkg.com/firebase@9.22.0/compat/firebase-firestore.js';
-            firestore.onload = () => console.log('✅ Firebase Firestore cargado desde unpkg');
-            document.head.appendChild(firestore);
-        }
-        
-        // Función alternativa usando un CDN completamente diferente
-        function loadFirebaseSimple() {
-            console.log('🔄 Cargando Firebase básico...');
-            
-            const script = document.createElement('script');
-            script.innerHTML = `
-                // Firebase simulado para modo offline
-                window.firebase = {
-                    apps: [],
-                    initializeApp: function() { 
-                        console.log('🔧 Firebase simulado inicializado');
-                        return {}; 
-                    },
-                    firestore: function() {
-                        return {
-                            collection: function() {
-                                return {
-                                    doc: function() {
-                                        return {
-                                            get: function() {
-                                                return Promise.reject(new Error('Modo offline'));
-                                            },
-                                            set: function() {
-                                                return Promise.reject(new Error('Modo offline'));
-                                            },
-                                            update: function() {
-                                                return Promise.reject(new Error('Modo offline'));
-                                            }
-                                        };
-                                    }
-                                };
-                            },
-                            enableNetwork: function() {
-                                return Promise.reject(new Error('Modo offline'));
-                            }
-                        };
-                    }
-                };
-                console.log('📱 Firebase modo offline activado');
-            `;
-            document.head.appendChild(script);
-        }
-    </script>
-    
-    <!-- Firebase Principal con manejo de errores -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js" 
-            onload="console.log('✅ Firebase App cargado correctamente')"
-            onerror="console.log('❌ Error cargando Firebase App, usando modo offline'); loadFirebaseSimple();"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"
-            onload="console.log('✅ Firebase Firestore cargado correctamente')"
-            onerror="console.log('❌ Error cargando Firebase Firestore');"></script>
-
-    <script>
-        // CONFIGURACIÓN DE FIREBASE - ACTUALIZADA
-        const firebaseConfig = {
-            apiKey: "AIzaSyDtVZRkftMlzuqy_iNrN72rwb1bmLQe3ds",
-            authDomain: "golf-stats-alonso-79c2c.firebaseapp.com",
-            projectId: "golf-stats-alonso-79c2c",
-            storageBucket: "golf-stats-alonso-79c2c.firebasestorage.app",
-            messagingSenderId: "660259821284",
-            appId: "1:660259821284:web:559ce2cc1cc2202daa3ef1"
-        };
-
-        // Verificar que Firebase está disponible
-        console.log('🔍 Verificando Firebase...');
-        console.log('Firebase disponible:', typeof firebase !== 'undefined');
-        
-        if (typeof firebase !== 'undefined') {
-            console.log('✅ Firebase SDK cargado correctamente');
-        } else {
-            console.log('❌ Firebase SDK no encontrado');
-        }
-
-        // Inicializar Firebase con mejor manejo de errores
-        let db = null;
-        let firebaseEnabled = false;
-
-        function inicializarFirebase() {
-            try {
-                console.log('🚀 Intentando inicializar Firebase...');
-                
-                // Verificar que Firebase esté disponible
-                if (typeof firebase === 'undefined') {
-                    throw new Error('Firebase SDK no cargado - verificar conexión a internet');
-                }
-                
-                console.log('📦 Firebase SDK encontrado, inicializando...');
-                
-                // Verificar si ya está inicializado
-                if (firebase.apps.length === 0) {
-                    firebase.initializeApp(firebaseConfig);
-                    console.log('🔧 Firebase inicializado');
-                } else {
-                    console.log('🔧 Firebase ya estaba inicializado');
-                }
-                
-                db = firebase.firestore();
-                console.log('💾 Firestore conectado');
-                
-                console.log('🧪 Probando conexión real a Firestore...');
-                
-                // Probar conexión real
-                return db.enableNetwork()
-                    .then(() => {
-                        console.log('🌐 Red habilitada');
-                        return db.collection('test').limit(1).get();
-                    })
-                    .then(() => {
-                        firebaseEnabled = true;
-                        console.log('✅ Firebase conectado exitosamente');
-                        mostrarNotificacion('🌐 Conectado a la nube', 'success');
-                        return true;
-                    })
-                    .catch((error) => {
-                        console.log('❌ Error de conexión Firestore:', error);
-                        throw new Error('Error de conexión: ' + error.message);
-                    });
-                    
-            } catch (error) {
-                console.log('❌ Error al inicializar Firebase:', error.message);
-                firebaseEnabled = false;
-                mostrarNotificacion('📱 Modo offline - datos guardados localmente', 'warning');
-                return Promise.resolve(false);
-            }
-        }
-
-        // Variables globales - localStorage como base principal
+        // Variables globales
         let rondas = [];
         let metas = {};
-        const userId = 'alonso';
-        
-        // Inicializar la aplicación inmediatamente
+
+        // Inicializar cuando el DOM esté listo
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('Iniciando dashboard...');
+            console.log('Iniciando Golf Stats Pro...');
             
-            // Cargar datos del localStorage PRIMERO (inmediato)
+            // Cargar datos del localStorage
             rondas = JSON.parse(localStorage.getItem('golfRondas')) || [];
             metas = JSON.parse(localStorage.getItem('golfMetas')) || {};
-            
-            console.log('Datos locales cargados:', rondas.length, 'rondas');
             
             // Configurar fecha actual
             document.getElementById('fecha').value = new Date().toISOString().split('T')[0];
             
-            // Inicializar UI inmediatamente
+            // Inicializar UI
             generarTablaHoyos();
             actualizarEstadisticas();
             mostrarHistorial();
             cargarMetas();
             
             console.log('Dashboard listo!');
-            
-            // Verificar conectividad y Firebase con más tiempo
-            console.log('🌐 Verificando conectividad...');
-            console.log('Navigator online:', navigator.onLine);
-            
-            // Esperar más tiempo para que Firebase se cargue
-            setTimeout(() => {
-                console.log('🔍 Verificando Firebase después de 2 segundos...');
-                console.log('Firebase disponible ahora:', typeof firebase !== 'undefined');
-                
-                if (!navigator.onLine) {
-                    console.log('❌ Sin conexión a internet');
-                    mostrarNotificacion('❌ Sin conexión a internet', 'error');
-                    return;
-                }
-                
-                inicializarFirebase()
-                    .then((conectado) => {
-                        if (conectado) {
-                            sincronizarConFirebase();
-                        }
-                    });
-            }, 2000); // Aumentado a 2 segundos
-            
-            // Verificación adicional después de 5 segundos
-            setTimeout(() => {
-                if (typeof firebase === 'undefined') {
-                    console.log('📱 Firebase no disponible - optimizando para modo offline');
-                    mostrarNotificacion('📱 Modo offline activado - datos guardados localmente', 'info');
-                    document.getElementById('sync-button').style.display = 'inline-block';
-                    document.getElementById('sync-button').textContent = '☁️ Activar Sincronización';
-                } else {
-                    console.log('✅ Firebase disponible después de la espera');
-                }
-            }, 5000);
         });
 
-        // Funciones de sincronización con Firebase
-        async function sincronizarConFirebase() {
-            if (!firebaseEnabled) {
-                console.log('Firebase no habilitado, saltando sincronización');
-                return;
-            }
-            
-            console.log('🔄 Sincronizando con Firebase...');
-            mostrarNotificacion('🔄 Sincronizando...', 'info');
-            
-            try {
-                // Verificar si hay datos en Firebase
-                const userDoc = await db.collection('usuarios').doc(userId).get();
-                
-                if (userDoc.exists) {
-                    const userData = userDoc.data();
-                    const rondasFirebase = userData.rondas || [];
-                    const metasFirebase = userData.metas || {};
-                    
-                    console.log('📊 Datos en Firebase:', rondasFirebase.length, 'rondas');
-                    console.log('📊 Datos locales:', rondas.length, 'rondas');
-                    
-                    // Comparar y fusionar datos (mantener el conjunto más completo)
-                    if (rondasFirebase.length > rondas.length) {
-                        console.log('⬇️ Descargando datos de Firebase...');
-                        rondas = rondasFirebase;
-                        metas = metasFirebase;
-                        
-                        // Actualizar localStorage
-                        localStorage.setItem('golfRondas', JSON.stringify(rondas));
-                        localStorage.setItem('golfMetas', JSON.stringify(metas));
-                        
-                        // Actualizar UI
-                        actualizarEstadisticas();
-                        mostrarHistorial();
-                        cargarMetas();
-                        
-                        mostrarNotificacion('📥 Datos actualizados desde la nube', 'success');
-                    } else if (rondas.length > rondasFirebase.length) {
-                        console.log('⬆️ Subiendo datos locales a Firebase...');
-                        await subirDatosAFirebase();
-                        mostrarNotificacion('📤 Datos subidos a la nube', 'success');
-                    } else {
-                        console.log('✅ Datos ya sincronizados');
-                        mostrarNotificacion('✅ Sincronizado con la nube', 'success');
-                    }
-                } else {
-                    // Crear documento inicial con datos locales
-                    console.log('🆕 Creando documento inicial en Firebase...');
-                    await crearDocumentoInicial();
-                    mostrarNotificacion('🆕 Cuenta creada en la nube', 'success');
-                }
-                
-            } catch (error) {
-                console.error('❌ Error detallado de Firebase:', error);
-                console.error('❌ Código de error:', error.code);
-                console.error('❌ Mensaje:', error.message);
-                
-                firebaseEnabled = false; // Deshabilitar para futuras operaciones
-                
-                // Mostrar botón de reconexión
-                document.getElementById('sync-button').style.display = 'inline-block';
-                
-                let mensajeError = 'Error de conexión con la nube';
-                if (error.code === 'permission-denied') {
-                    mensajeError = 'Sin permisos - verifica reglas de Firestore';
-                } else if (error.code === 'unavailable') {
-                    mensajeError = 'Servicio no disponible - verifica internet';
-                }
-                
-                mostrarNotificacion(`⚠️ ${mensajeError}`, 'warning');
-            }
-        }
-
-        function intentarReconectar() {
-            console.log('🔄 Reintentando conexión...');
-            const btn = document.getElementById('sync-button');
-            btn.style.display = 'none';
-            
-            // Verificar primero si Firebase está disponible ahora
-            if (typeof firebase !== 'undefined') {
-                console.log('✅ Firebase detectado, intentando conectar...');
-                inicializarFirebase()
-                    .then((conectado) => {
-                        if (!conectado) {
-                            btn.style.display = 'inline-block';
-                        }
-                    });
-                return;
-            }
-            
-            console.log('🔄 Firebase no detectado, usando modo offline optimizado...');
-            mostrarNotificacion('📱 Activando modo offline optimizado', 'info');
-            
-            // Activar modo offline con funcionalidad local mejorada
-            firebaseEnabled = false;
-            
-            // Verificar que tenemos datos locales y mostrar estadísticas
-            if (rondas.length > 0) {
-                mostrarNotificacion('📊 Mostrando ' + rondas.length + ' rondas guardadas localmente', 'success');
-                actualizarEstadisticas();
-                mostrarHistorial();
-            } else {
-                mostrarNotificacion('💡 Dashboard listo - los datos se guardarán localmente', 'info');
-            }
-            
-            btn.textContent = '☁️ Intentar Sincronización';
-            btn.style.display = 'inline-block';
-        }
-
-        async function subirDatosAFirebase() {
-            if (!firebaseEnabled) return;
-            
-            try {
-                await db.collection('usuarios').doc(userId).update({
-                    rondas: rondas,
-                    metas: metas,
-                    ultimaActualizacion: firebase.firestore.FieldValue.serverTimestamp()
-                });
-                console.log('Datos subidos a Firebase exitosamente');
-            } catch (error) {
-                console.log('Error al subir datos a Firebase:', error);
-                throw error;
-            }
-        }
-
-        async function crearDocumentoInicial() {
-            if (!firebaseEnabled) return;
-            
-            try {
-                await db.collection('usuarios').doc(userId).set({
-                    nombre: 'Alonso',
-                    fechaCreacion: firebase.firestore.FieldValue.serverTimestamp(),
-                    rondas: rondas,
-                    metas: metas
-                });
-                console.log('Documento inicial creado en Firebase');
-            } catch (error) {
-                console.log('Error al crear documento inicial:', error);
-                throw error;
-            }
-        }
-
-        function mostrarNotificacion(mensaje, tipo = 'info') {
-            // Crear notificación temporal
-            const notificacion = document.createElement('div');
-            notificacion.style.cssText = `
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                padding: 15px 20px;
-                border-radius: 10px;
-                color: white;
-                font-weight: bold;
-                z-index: 1000;
-                transition: opacity 0.3s ease;
-                ${tipo === 'success' ? 'background: #28a745;' : ''}
-                ${tipo === 'warning' ? 'background: #ffc107; color: #333;' : ''}
-                ${tipo === 'error' ? 'background: #dc3545;' : ''}
-                ${tipo === 'info' ? 'background: #17a2b8;' : ''}
-            `;
-            notificacion.textContent = mensaje;
-            
-            document.body.appendChild(notificacion);
-            
-            // Remover después de 4 segundos
-            setTimeout(() => {
-                notificacion.style.opacity = '0';
-                setTimeout(() => {
-                    if (document.body.contains(notificacion)) {
-                        document.body.removeChild(notificacion);
-                    }
-                }, 300);
-            }, 4000);
-        }
-
         function switchTab(tabName, tabElement) {
-            console.log('Cambiando a:', tabName);
-            
             // Ocultar todos los contenidos
             document.querySelectorAll('.content').forEach(content => {
                 content.classList.remove('active');
@@ -939,7 +574,7 @@
             }
             tableHTML += `<td id="total-score" class="score-total">72</td></tr>`;
             
-            // Fila de Fairways (solo para par 4 y 5)
+            // Fila de Fairways
             tableHTML += `<tr><td class="row-label">🎯 Fairway</td>`;
             for (let i = 1; i <= 18; i++) {
                 tableHTML += `
@@ -1002,7 +637,6 @@
             tableHTML += `</tbody>`;
             holesTable.innerHTML = tableHTML;
             
-            console.log('Tabla de 18 hoyos generada');
             calcularScoreTotal();
         }
 
@@ -1037,18 +671,17 @@
                 // Colorear según el resultado vs par
                 const diferencia = totalScore - totalPar;
                 if (diferencia < 0) {
-                    totalScoreCell.style.background = 'linear-gradient(135deg, #28a745, #20c997)'; // Verde para bajo par
+                    totalScoreCell.style.background = 'linear-gradient(135deg, #28a745, #20c997)';
                 } else if (diferencia === 0) {
-                    totalScoreCell.style.background = 'linear-gradient(135deg, #17a2b8, #138496)'; // Azul para par
+                    totalScoreCell.style.background = 'linear-gradient(135deg, #17a2b8, #138496)';
                 } else {
-                    totalScoreCell.style.background = 'linear-gradient(135deg, #ff6b6b, #ee5a24)'; // Rojo para sobre par
+                    totalScoreCell.style.background = 'linear-gradient(135deg, #ff6b6b, #ee5a24)';
                 }
             }
             if (totalParCell) {
                 totalParCell.textContent = totalPar;
             }
             
-            // También actualizar estadísticas de fairways y putts
             actualizarFairwayStats();
             calcularPuttStats();
         }
@@ -1162,7 +795,7 @@
             const observaciones = document.getElementById('observaciones').value;
             
             if (!fecha || !campo) {
-                alert('Por favor completa los campos obligatorios');
+                alert('Por favor completa los campos obligatorios (Fecha y Campo)');
                 return;
             }
 
@@ -1203,7 +836,7 @@
                     par,
                     fairway: fairwayValue === 'hit',
                     fairwayDirection: fairwayValue && fairwayValue !== 'hit' ? fairwayValue : null,
-                    esFairwayHole, // Nuevo campo para identificar si cuenta para estadísticas
+                    esFairwayHole,
                     gir: girValue === 'hit',
                     girDirection: girValue && girValue !== 'hit' ? girValue : null,
                     putts,
@@ -1212,7 +845,7 @@
             }
 
             ronda.score = scoreTotal;
-            ronda.fairwaysPosibles = fairwaysPosibles; // Guardar cuántos fairways eran posibles
+            ronda.fairwaysPosibles = fairwaysPosibles;
 
             // Guardar foto si existe
             const fotoInput = document.getElementById('foto');
@@ -1230,25 +863,12 @@
 
         function completarGuardado(ronda) {
             rondas.push(ronda);
-            
-            // Guardar en localStorage inmediatamente
             localStorage.setItem('golfRondas', JSON.stringify(rondas));
             
             alert('¡Ronda guardada exitosamente! 🎉');
             limpiarFormulario();
             actualizarEstadisticas();
             mostrarHistorial();
-            
-            // Subir a Firebase en segundo plano
-            if (firebaseEnabled) {
-                subirDatosAFirebase()
-                    .then(() => {
-                        mostrarNotificacion('☁️ Ronda sincronizada con la nube', 'success');
-                    })
-                    .catch(() => {
-                        mostrarNotificacion('⚠️ Ronda guardada localmente, se sincronizará más tarde', 'warning');
-                    });
-            }
         }
 
         function limpiarFormulario() {
@@ -1277,7 +897,7 @@
             const statsDiv = document.getElementById('stats-summary');
             
             if (rondas.length === 0) {
-                statsDiv.innerHTML = '<p>No hay rondas registradas aún.</p>';
+                statsDiv.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">No hay rondas registradas aún. ¡Añade tu primera ronda!</p>';
                 return;
             }
 
@@ -1295,7 +915,160 @@
                 totalScore += ronda.score;
                 if (ronda.hoyos) {
                     ronda.hoyos.forEach(hoyo => {
-                        // Solo contar fairways en hoyos par 4 y 5
+                        if (hoyo.esFairwayHole || (hoyo.par === 4 || hoyo.par === 5)) {
+                            totalFairwaysPosibles++;
+                            if (hoyo.fairway) totalFairwaysAcertados++;
+                        }
+                        if (hoyo.gir) totalGIR++;
+                        totalPutts += hoyo.putts || 0;
+                        if (hoyo.updown) totalUpDown++;
+                    });
+                }
+            });
+
+            const promedioScore = (totalScore / totalRondas).toFixed(1);
+            const porcentajeFairways = totalFairwaysPosibles > 0 ? ((totalFairwaysAcertados / totalFairwaysPosibles) * 100).toFixed(1) : 0;
+            const porcentajeGIR = ((totalGIR / totalHoyos) * 100).toFixed(1);
+            const promedioPutts = (totalPutts / totalHoyos).toFixed(1);
+            const porcentajeUpDown = ((totalUpDown / totalHoyos) * 100).toFixed(1);
+
+            statsDiv.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-value">${promedioScore}</div>
+                    <div class="stat-label">Score Promedio</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${porcentajeFairways}%</div>
+                    <div class="stat-label">Fairways (${totalFairwaysAcertados}/${totalFairwaysPosibles})</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${porcentajeGIR}%</div>
+                    <div class="stat-label">GIR</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${promedioPutts}</div>
+                    <div class="stat-label">Putts por Hoyo</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${porcentajeUpDown}%</div>
+                    <div class="stat-label">Up & Down</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${totalRondas}</div>
+                    <div class="stat-label">Rondas Jugadas</div>
+                </div>
+            `;
+        }
+
+        function mostrarHistorial() {
+            const roundsList = document.getElementById('rounds-list');
+            
+            if (rondas.length === 0) {
+                roundsList.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">No hay rondas registradas aún. ¡Añade tu primera ronda!</p>';
+                return;
+            }
+
+            roundsList.innerHTML = '';
+            
+            const rondasOrdenadas = [...rondas].sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+            
+            rondasOrdenadas.forEach(ronda => {
+                let fairwaysAcertados = 0;
+                let fairwaysPosibles = 0;
+                let girs = 0;
+                let putts = 0;
+                let updowns = 0;
+                
+                if (ronda.hoyos) {
+                    ronda.hoyos.forEach(h => {
+                        if (h.esFairwayHole || (h.par === 4 || h.par === 5)) {
+                            fairwaysPosibles++;
+                            if (h.fairway) fairwaysAcertados++;
+                        }
+                        if (h.gir) girs++;
+                        putts += h.putts || 0;
+                        if (h.updown) updowns++;
+                    });
+                }
+
+                const roundItem = document.createElement('div');
+                roundItem.className = 'round-item';
+                roundItem.innerHTML = `
+                    <div class="round-header">
+                        <div>
+                            <strong>${new Date(ronda.fecha).toLocaleDateString('es-ES')}</strong> - ${ronda.campo}
+                            ${ronda.tipo === 'torneo' ? '<span class="tournament-badge">TORNEO</span>' : ''}
+                            ${ronda.nombreTorneo ? `<br><em style="color: #666; font-size: 0.9em;">🏆 ${ronda.nombreTorneo}</em>` : ''}
+                        </div>
+                        <div style="font-size: 1.5em; font-weight: bold; color: #1e3c72;">
+                            ${ronda.score}
+                        </div>
+                    </div>
+                    ${ronda.companeros ? `<div style="margin: 5px 0; color: #666;"><strong>👥 Jugó con:</strong> ${ronda.companeros}</div>` : ''}
+                    <div class="round-stats">
+                        <div><strong>Fairways:</strong> ${fairwaysAcertados}/${fairwaysPosibles} (${fairwaysPosibles > 0 ? ((fairwaysAcertados/fairwaysPosibles)*100).toFixed(1) : 0}%)</div>
+                        <div><strong>GIR:</strong> ${girs}/18 (${((girs/18)*100).toFixed(1)}%)</div>
+                        <div><strong>Putts:</strong> ${putts} (${putts > 0 ? (putts/18).toFixed(1) : '0'} promedio)</div>
+                        <div><strong>Up & Down:</strong> ${updowns}/18 (${((updowns/18)*100).toFixed(1)}%)</div>
+                    </div>
+                    ${ronda.observaciones ? `
+                        <div style="margin-top: 15px; padding: 10px; background: #f0f8ff; border-radius: 8px; border-left: 4px solid #1e3c72;">
+                            <strong>📝 Observaciones:</strong><br>
+                            <em style="color: #333;">${ronda.observaciones}</em>
+                        </div>
+                    ` : ''}
+                    ${ronda.enlace ? `<div style="margin-top: 10px;"><a href="${ronda.enlace}" target="_blank">🔗 Ver resultados completos</a></div>` : ''}
+                    ${ronda.foto ? `<div style="margin-top: 10px;"><img src="${ronda.foto}" style="max-width: 200px; border-radius: 5px; cursor: pointer;" onclick="mostrarFoto('${ronda.foto}')"></div>` : ''}
+                `;
+                roundsList.appendChild(roundItem);
+            });
+        }
+
+        function guardarMetas() {
+            metas = {
+                score: parseFloat(document.getElementById('metaScore').value) || null,
+                fairways: parseFloat(document.getElementById('metaFairways').value) || null,
+                gir: parseFloat(document.getElementById('metaGIR').value) || null,
+                putts: parseFloat(document.getElementById('metaPutts').value) || null,
+                objetivo: document.getElementById('objetivoMes').value || ''
+            };
+            
+            localStorage.setItem('golfMetas', JSON.stringify(metas));
+            alert('¡Metas guardadas exitosamente! 🎯');
+        }
+
+        function cargarMetas() {
+            if (metas.score) document.getElementById('metaScore').value = metas.score;
+            if (metas.fairways) document.getElementById('metaFairways').value = metas.fairways;
+            if (metas.gir) document.getElementById('metaGIR').value = metas.gir;
+            if (metas.putts) document.getElementById('metaPutts').value = metas.putts;
+            if (metas.objetivo) document.getElementById('objetivoMes').value = metas.objetivo;
+        }
+
+        function exportarDatos() {
+            if (rondas.length === 0) {
+                alert('No hay datos para exportar');
+                return;
+            }
+
+            let reporte = `REPORTE DE GOLF - ALONSO\n`;
+            reporte += `Generado: ${new Date().toLocaleDateString('es-ES')}\n`;
+            reporte += `=====================================\n\n`;
+
+            const totalRondas = rondas.length;
+            const totalHoyos = totalRondas * 18;
+            
+            let totalFairwaysAcertados = 0;
+            let totalFairwaysPosibles = 0;
+            let totalGIR = 0;
+            let totalPutts = 0;
+            let totalUpDown = 0;
+            let totalScore = 0;
+
+            rondas.forEach(ronda => {
+                totalScore += ronda.score;
+                if (ronda.hoyos) {
+                    ronda.hoyos.forEach(hoyo => {
                         if (hoyo.esFairwayHole || (hoyo.par === 4 || hoyo.par === 5)) {
                             totalFairwaysPosibles++;
                             if (hoyo.fairway) totalFairwaysAcertados++;
@@ -1395,9 +1168,8 @@
                 reporte += `\n`;
             });
 
-            reporte += `\nNOTA: Para ver gráficos y análisis detallados, acceder al dashboard en línea.\n`;
-            reporte += `Los datos se sincronizan automáticamente entre todos los dispositivos.\n`;
-            reporte += `Los fairways solo se cuentan en hoyos par 4 y par 5 (máximo 14 por ronda en campo estándar).\n`;
+            reporte += `\nNOTA: Los fairways solo se cuentan en hoyos par 4 y par 5.\n`;
+            reporte += `Dashboard local - datos guardados en el navegador.\n`;
 
             const blob = new Blob([reporte], { type: 'text/plain;charset=utf-8' });
             const url = window.URL.createObjectURL(blob);
@@ -1409,7 +1181,7 @@
             document.body.removeChild(a);
             window.URL.revokeObjectURL(url);
 
-            alert('📤 Reporte exportado! El archivo incluye análisis de tendencias direccionales y la URL del dashboard para que el coach pueda acceder en línea.');
+            alert('📤 Reporte exportado con análisis de tendencias direccionales!');
         }
 
         function mostrarFoto(src) {
@@ -1425,173 +1197,4 @@
         }
     </script>
 </body>
-</html>certados / totalFairwaysPosibles) * 100).toFixed(1) : 0;
-            const porcentajeGIR = ((totalGIR / totalHoyos) * 100).toFixed(1);
-            const promedioPutts = (totalPutts / totalHoyos).toFixed(1);
-            const porcentajeUpDown = ((totalUpDown / totalHoyos) * 100).toFixed(1);
-
-            statsDiv.innerHTML = `
-                <div class="stat-card">
-                    <div class="stat-value">${promedioScore}</div>
-                    <div class="stat-label">Score Promedio</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value">${porcentajeFairways}%</div>
-                    <div class="stat-label">Fairways (${totalFairwaysAcertados}/${totalFairwaysPosibles})</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value">${porcentajeGIR}%</div>
-                    <div class="stat-label">GIR</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value">${promedioPutts}</div>
-                    <div class="stat-label">Putts por Hoyo</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value">${porcentajeUpDown}%</div>
-                    <div class="stat-label">Up & Down</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value">${totalRondas}</div>
-                    <div class="stat-label">Rondas Jugadas</div>
-                </div>
-            `;
-        }
-
-        function mostrarHistorial() {
-            const roundsList = document.getElementById('rounds-list');
-            
-            if (rondas.length === 0) {
-                roundsList.innerHTML = '<p>No hay rondas registradas aún.</p>';
-                return;
-            }
-
-            roundsList.innerHTML = '';
-            
-            const rondasOrdenadas = [...rondas].sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
-            
-            rondasOrdenadas.forEach(ronda => {
-                let fairwaysAcertados = 0;
-                let fairwaysPosibles = 0;
-                let girs = 0;
-                let putts = 0;
-                let updowns = 0;
-                
-                if (ronda.hoyos) {
-                    ronda.hoyos.forEach(h => {
-                        // Contar fairways solo en par 4 y 5
-                        if (h.esFairwayHole || (h.par === 4 || h.par === 5)) {
-                            fairwaysPosibles++;
-                            if (h.fairway) fairwaysAcertados++;
-                        }
-                        if (h.gir) girs++;
-                        putts += h.putts || 0;
-                        if (h.updown) updowns++;
-                    });
-                }
-
-                const roundItem = document.createElement('div');
-                roundItem.className = 'round-item';
-                roundItem.innerHTML = `
-                    <div class="round-header">
-                        <div>
-                            <strong>${new Date(ronda.fecha).toLocaleDateString('es-ES')}</strong> - ${ronda.campo}
-                            ${ronda.tipo === 'torneo' ? '<span class="tournament-badge">TORNEO</span>' : ''}
-                            ${ronda.nombreTorneo ? `<br><em style="color: #666; font-size: 0.9em;">🏆 ${ronda.nombreTorneo}</em>` : ''}
-                        </div>
-                        <div style="font-size: 1.5em; font-weight: bold; color: #1e3c72;">
-                            ${ronda.score}
-                        </div>
-                    </div>
-                    ${ronda.companeros ? `<div style="margin: 5px 0; color: #666;"><strong>👥 Jugó con:</strong> ${ronda.companeros}</div>` : ''}
-                    <div class="round-stats">
-                        <div><strong>Fairways:</strong> ${fairwaysAcertados}/${fairwaysPosibles} (${fairwaysPosibles > 0 ? ((fairwaysAcertados/fairwaysPosibles)*100).toFixed(1) : 0}%)</div>
-                        <div><strong>GIR:</strong> ${girs}/18 (${((girs/18)*100).toFixed(1)}%)</div>
-                        <div><strong>Putts:</strong> ${putts} (${putts > 0 ? (putts/18).toFixed(1) : '0'} promedio)</div>
-                        <div><strong>Up & Down:</strong> ${updowns}/18 (${((updowns/18)*100).toFixed(1)}%)</div>
-                    </div>
-                    ${ronda.observaciones ? `
-                        <div style="margin-top: 15px; padding: 10px; background: #f0f8ff; border-radius: 8px; border-left: 4px solid #1e3c72;">
-                            <strong>📝 Observaciones:</strong><br>
-                            <em style="color: #333;">${ronda.observaciones}</em>
-                        </div>
-                    ` : ''}
-                    ${ronda.enlace ? `<div style="margin-top: 10px;"><a href="${ronda.enlace}" target="_blank">🔗 Ver resultados completos</a></div>` : ''}
-                    ${ronda.foto ? `<div style="margin-top: 10px;"><img src="${ronda.foto}" style="max-width: 200px; border-radius: 5px; cursor: pointer;" onclick="mostrarFoto('${ronda.foto}')"></div>` : ''}
-                `;
-                roundsList.appendChild(roundItem);
-            });
-        }
-
-        function guardarMetas() {
-            metas = {
-                score: parseFloat(document.getElementById('metaScore').value) || null,
-                fairways: parseFloat(document.getElementById('metaFairways').value) || null,
-                gir: parseFloat(document.getElementById('metaGIR').value) || null,
-                putts: parseFloat(document.getElementById('metaPutts').value) || null,
-                objetivo: document.getElementById('objetivoMes').value || ''
-            };
-            
-            // Guardar en localStorage inmediatamente
-            localStorage.setItem('golfMetas', JSON.stringify(metas));
-            alert('¡Metas guardadas exitosamente! 🎯');
-            
-            // Subir a Firebase en segundo plano
-            if (firebaseEnabled) {
-                subirDatosAFirebase()
-                    .then(() => {
-                        mostrarNotificacion('☁️ Metas sincronizadas con la nube', 'success');
-                    })
-                    .catch(() => {
-                        mostrarNotificacion('⚠️ Metas guardadas localmente, se sincronizarán más tarde', 'warning');
-                    });
-            }
-        }
-
-        function cargarMetas() {
-            if (metas.score) document.getElementById('metaScore').value = metas.score;
-            if (metas.fairways) document.getElementById('metaFairways').value = metas.fairways;
-            if (metas.gir) document.getElementById('metaGIR').value = metas.gir;
-            if (metas.putts) document.getElementById('metaPutts').value = metas.putts;
-            if (metas.objetivo) document.getElementById('objetivoMes').value = metas.objetivo;
-        }
-
-        function exportarDatos() {
-            if (rondas.length === 0) {
-                alert('No hay datos para exportar');
-                return;
-            }
-
-            let reporte = `REPORTE DE GOLF - ALONSO\n`;
-            reporte += `Generado: ${new Date().toLocaleDateString('es-ES')}\n`;
-            reporte += `Acceso en línea: https://tu-dashboard-url.com\n`;
-            reporte += `=====================================\n\n`;
-
-            const totalRondas = rondas.length;
-            const totalHoyos = totalRondas * 18;
-            
-            let totalFairwaysAcertados = 0;
-            let totalFairwaysPosibles = 0;
-            let totalGIR = 0;
-            let totalPutts = 0;
-            let totalUpDown = 0;
-            let totalScore = 0;
-
-            rondas.forEach(ronda => {
-                totalScore += ronda.score;
-                if (ronda.hoyos) {
-                    ronda.hoyos.forEach(hoyo => {
-                        // Solo contar fairways en par 4 y 5
-                        if (hoyo.esFairwayHole || (hoyo.par === 4 || hoyo.par === 5)) {
-                            totalFairwaysPosibles++;
-                            if (hoyo.fairway) totalFairwaysAcertados++;
-                        }
-                        if (hoyo.gir) totalGIR++;
-                        totalPutts += hoyo.putts || 0;
-                        if (hoyo.updown) totalUpDown++;
-                    });
-                }
-            });
-
-            const promedioScore = (totalScore / totalRondas).toFixed(1);
-            const porcentajeFairways = totalFairwaysPosibles > 0 ? ((totalFairwaysA
+</html>
