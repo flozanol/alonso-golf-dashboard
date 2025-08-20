@@ -52,44 +52,8 @@
             color: #dc3545;
         }
 
-        .form-group {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .form-group label {
-            margin-bottom: 8px;
-            font-weight: bold;
-            color: #1e3c72;
-        }
-
-        .form-group input, .form-group select, .form-group textarea {
-            padding: 12px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 16px;
-            transition: border-color 0.3s ease;
-        }
-
-        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
-            outline: none;
-            border-color: #2a5298;
-        }
-
-        .btn {
-            background: linear-gradient(135deg, #1e3c72, #2a5298);
-            color: white;
-            border: none;
-            padding: 15px 30px;
-            border-radius: 10px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: bold;
-            transition: transform 0.3s ease;
-        }
-
-        .btn:hover {
-            transform: translateY(-2px);
+        .sync-status.offline {
+            color: #6c757d;
         }
 
         .header {
@@ -550,8 +514,8 @@
                         </select>
                     </div>
                     <div class="form-group">
-                        <label>Score Total</label>
-                        <input type="number" id="score" placeholder="Ej: 72" required>
+                        <label>Score Total (se calcula automáticamente)</label>
+                        <input type="number" id="score" placeholder="Se suma automáticamente" readonly style="background: #f0f0f0;">
                     </div>
                 </div>
 
@@ -666,25 +630,6 @@
             </div>
         </div>
 
-        <!-- Estadísticas -->
-        <div id="estadisticas" class="content">
-            <div class="card">
-                <h2>📈 Estadísticas Generales</h2>
-                <div class="stats-summary" id="stats-summary">
-                    <!-- Las estadísticas se generarán dinámicamente -->
-                </div>
-                
-                <div style="text-align: center; margin-top: 20px;">
-                    <button class="btn" onclick="exportarDatos()">📤 Exportar Datos para Coach</button>
-                </div>
-            </div>
-
-            <div class="card">
-                <h2>📊 Tendencias</h2>
-                <canvas id="trendsChart" width="400" height="200"></canvas>
-            </div>
-        </div>
-
         <!-- Historial -->
         <div id="historial" class="content">
             <div class="card">
@@ -696,55 +641,161 @@
         </div>
     </div>
 
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    
     <script>
+        // CONFIGURACIÓN DE FIREBASE
+        const firebaseConfig = {
+            apiKey: "AIzaSyDjcWXUWbUmLwyqL6dH5ImR1OrepoVTx4w",
+            authDomain: "golf-stats-alonso.firebaseapp.com",
+            databaseURL: "https://golf-stats-alonso-default-rtdb.firebaseio.com",
+            projectId: "golf-stats-alonso",
+            storageBucket: "golf-stats-alonso.firebasestorage.app",
+            messagingSenderId: "377808587062",
+            appId: "1:377808587062:web:6cfc7a2aeac5301f830b97"
+        };
+
+        // Inicializar Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
         // Variables globales
-        let rondas = JSON.parse(localStorage.getItem('golfRondas')) || [];
-        let metas = JSON.parse(localStorage.getItem('golfMetas')) || {};
+        let rondas = [];
+        let metas = {};
         let scoreChart, statsChart;
+        const userId = 'alonso';
         
         // Inicializar la aplicación
         document.addEventListener('DOMContentLoaded', function() {
+            actualizarEstadoSync('cargando');
+            cargarDatosDelUsuario();
+        });
+
+        // Funciones de base de datos
+        function actualizarEstadoSync(estado) {
+            const statusDiv = document.getElementById('sync-status');
+            switch(estado) {
+                case 'cargando':
+                    statusDiv.textContent = '🔄 Cargando datos...';
+                    statusDiv.className = 'sync-status syncing';
+                    break;
+                case 'syncing':
+                    statusDiv.textContent = '🔄 Guardando en la nube...';
+                    statusDiv.className = 'sync-status syncing';
+                    break;
+                case 'synced':
+                    statusDiv.textContent = '✅ Datos sincronizados';
+                    statusDiv.className = 'sync-status synced';
+                    break;
+                case 'error':
+                    statusDiv.textContent = '❌ Error - usando datos locales';
+                    statusDiv.className = 'sync-status error';
+                    break;
+                case 'offline':
+                    statusDiv.textContent = '📱 Modo offline';
+                    statusDiv.className = 'sync-status offline';
+                    break;
+            }
+        }
+
+        async function cargarDatosDelUsuario() {
+            actualizarEstadoSync('cargando');
+            
+            try {
+                const userDoc = await db.collection('usuarios').doc(userId).get();
+                
+                if (userDoc.exists) {
+                    const userData = userDoc.data();
+                    rondas = userData.rondas || [];
+                    metas = userData.metas || {};
+                } else {
+                    await db.collection('usuarios').doc(userId).set({
+                        nombre: 'Alonso',
+                        fechaCreacion: firebase.firestore.FieldValue.serverTimestamp(),
+                        rondas: [],
+                        metas: {}
+                    });
+                    rondas = [];
+                    metas = {};
+                }
+
+                await migrarDatosLocalStorage();
+                inicializarUI();
+                actualizarEstadoSync('synced');
+            } catch (error) {
+                console.error('Error al cargar datos:', error);
+                rondas = JSON.parse(localStorage.getItem('golfRondas')) || [];
+                metas = JSON.parse(localStorage.getItem('golfMetas')) || {};
+                inicializarUI();
+                actualizarEstadoSync('error');
+            }
+        }
+
+        function inicializarUI() {
             document.getElementById('fecha').value = new Date().toISOString().split('T')[0];
             generarHoyos();
             actualizarEstadisticas();
             mostrarHistorial();
             cargarMetas();
             actualizarProgresoMetas();
-            
-            // Agregar listeners para actualizar score total automáticamente
-            setTimeout(() => {
-                for (let i = 1; i <= 18; i++) {
-                    document.getElementById(`score-${i}`).addEventListener('input', calcularScoreTotal);
-                }
-            }, 100);
-        });
+        }
 
-        function calcularScoreTotal() {
-            let total = 0;
-            for (let i = 1; i <= 18; i++) {
-                const score = parseInt(document.getElementById(`score-${i}`).value) || 0;
-                total += score;
+        async function guardarDatosEnFirebase() {
+            actualizarEstadoSync('syncing');
+            
+            try {
+                await db.collection('usuarios').doc(userId).update({
+                    rondas: rondas,
+                    metas: metas,
+                    ultimaActualizacion: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                
+                actualizarEstadoSync('synced');
+            } catch (error) {
+                console.error('Error al guardar datos:', error);
+                localStorage.setItem('golfRondas', JSON.stringify(rondas));
+                localStorage.setItem('golfMetas', JSON.stringify(metas));
+                actualizarEstadoSync('offline');
+                throw error;
             }
-            document.getElementById('score').value = total > 0 ? total : '';
+        }
+
+        async function migrarDatosLocalStorage() {
+            const rondasLocal = JSON.parse(localStorage.getItem('golfRondas')) || [];
+            const metasLocal = JSON.parse(localStorage.getItem('golfMetas')) || {};
+            
+            if (rondasLocal.length > 0 || Object.keys(metasLocal).length > 0) {
+                if (rondas.length === 0 && Object.keys(metas).length === 0) {
+                    rondas = rondasLocal;
+                    metas = metasLocal;
+                    
+                    try {
+                        await guardarDatosEnFirebase();
+                        localStorage.removeItem('golfRondas');
+                        localStorage.removeItem('golfMetas');
+                        alert('✅ Datos migrados exitosamente a la nube!');
+                    } catch (error) {
+                        console.log('Error al migrar, manteniendo datos locales');
+                    }
+                }
+            }
         }
 
         function switchTab(tabName) {
-            // Ocultar todos los contenidos
             document.querySelectorAll('.content').forEach(content => {
                 content.classList.remove('active');
             });
             
-            // Remover clase active de todas las tabs
             document.querySelectorAll('.tab').forEach(tab => {
                 tab.classList.remove('active');
             });
             
-            // Mostrar contenido seleccionado
             document.getElementById(tabName).classList.add('active');
             event.target.classList.add('active');
             
-            // Actualizar datos si es necesario
             if (tabName === 'estadisticas') {
                 actualizarEstadisticas();
             } else if (tabName === 'historial') {
@@ -758,8 +809,6 @@
 
         function generarHoyos() {
             const holesGrid = document.getElementById('holes-grid');
-            if (!holesGrid) return;
-            
             holesGrid.innerHTML = '';
             
             for (let i = 1; i <= 18; i++) {
@@ -770,7 +819,7 @@
                     <div class="hole-stats">
                         <div class="hole-stat">
                             <label>Score</label>
-                            <input type="number" id="score-${i}" min="1" max="10" value="4">
+                            <input type="number" id="score-${i}" min="1" max="10" value="4" onchange="calcularScoreTotal()">
                         </div>
                         <div class="hole-stat">
                             <label>Par</label>
@@ -800,17 +849,15 @@
                 `;
                 holesGrid.appendChild(holeCard);
             }
-            
-            // Agregar listeners para actualizar score total automáticamente
-            setTimeout(() => {
-                for (let i = 1; i <= 18; i++) {
-                    const scoreInput = document.getElementById(`score-${i}`);
-                    if (scoreInput) {
-                        scoreInput.addEventListener('input', calcularScoreTotal);
-                    }
-                }
-            }, 100);
         }
+
+        function calcularScoreTotal() {
+            let total = 0;
+            for (let i = 1; i <= 18; i++) {
+                const score = parseInt(document.getElementById(`score-${i}`).value) || 0;
+                total += score;
+            }
+            document.getElementById('score').value = total > 0 ? total : '';
         }
 
         function previewPhoto(input) {
@@ -823,761 +870,3 @@
                 };
                 reader.readAsDataURL(input.files[0]);
             }
-        }
-
-        function guardarRonda() {
-            const fecha = document.getElementById('fecha').value;
-            const campo = document.getElementById('campo').value;
-            const tipo = document.getElementById('tipo').value;
-            const score = parseInt(document.getElementById('score').value);
-            const nombreTorneo = document.getElementById('nombreTorneo').value;
-            const companeros = document.getElementById('companeros').value;
-            const enlace = document.getElementById('enlace').value;
-            const observaciones = document.getElementById('observaciones').value;
-            
-            if (!fecha || !campo) {
-                alert('Por favor completa los campos obligatorios');
-                return;
-            }
-
-            // Validar que al menos algunos hoyos tengan score
-            let hayScores = false;
-            for (let i = 1; i <= 18; i++) {
-                const score = parseInt(document.getElementById(`score-${i}`).value);
-                if (score && score > 0) {
-                    hayScores = true;
-                    break;
-                }
-            }
-            
-            if (!hayScores) {
-                alert('Por favor ingresa el score de al menos algunos hoyos');
-                return;
-            }
-
-            const ronda = {
-                id: Date.now(),
-                fecha,
-                campo,
-                tipo,
-                score,
-                nombreTorneo,
-                companeros,
-                enlace,
-                observaciones,
-                hoyos: []
-            };
-
-            // Recopilar datos de cada hoyo
-            let scoreTotal = 0;
-            for (let i = 1; i <= 18; i++) {
-                const score = parseInt(document.getElementById(`score-${i}`).value) || 4;
-                const par = parseInt(document.getElementById(`par-${i}`).value) || 4;
-                const fairway = document.getElementById(`fairway-${i}`).checked;
-                const gir = document.getElementById(`gir-${i}`).checked;
-                const putts = parseInt(document.getElementById(`putts-${i}`).value) || 2;
-                const updown = document.getElementById(`updown-${i}`).checked;
-
-                scoreTotal += score;
-
-                ronda.hoyos.push({
-                    hoyo: i,
-                    score,
-                    par,
-                    fairway,
-                    gir,
-                    putts,
-                    updown
-                });
-            }
-
-            // Actualizar score total si no se había ingresado manualmente
-            if (!score || score === 0) {
-                ronda.score = scoreTotal;
-                document.getElementById('score').value = scoreTotal;
-            }
-
-            // Guardar la foto si existe
-            const fotoInput = document.getElementById('foto');
-            if (fotoInput.files[0]) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    ronda.foto = e.target.result;
-                    completarGuardado(ronda);
-                };
-                reader.readAsDataURL(fotoInput.files[0]);
-            } else {
-                completarGuardado(ronda);
-            }
-        }
-
-        function completarGuardado(ronda) {
-            rondas.push(ronda);
-            localStorage.setItem('golfRondas', JSON.stringify(rondas));
-            
-            alert('¡Ronda guardada exitosamente! 🎉');
-            limpiarFormulario();
-        }
-
-        function limpiarFormulario() {
-            document.getElementById('campo').value = '';
-            document.getElementById('score').value = '';
-            document.getElementById('nombreTorneo').value = '';
-            document.getElementById('companeros').value = '';
-            document.getElementById('enlace').value = '';
-            document.getElementById('observaciones').value = '';
-            document.getElementById('foto').value = '';
-            document.getElementById('photo-preview').style.display = 'none';
-            
-            // Limpiar hoyos
-            for (let i = 1; i <= 18; i++) {
-                document.getElementById(`score-${i}`).value = 4;
-                document.getElementById(`par-${i}`).value = 4;
-                document.getElementById(`fairway-${i}`).checked = false;
-                document.getElementById(`gir-${i}`).checked = false;
-                document.getElementById(`putts-${i}`).value = 2;
-                document.getElementById(`updown-${i}`).checked = false;
-            }
-        }
-
-        function actualizarEstadisticas() {
-            if (rondas.length === 0) {
-                document.getElementById('stats-summary').innerHTML = '<p>No hay rondas registradas aún.</p>';
-                return;
-            }
-
-            const totalRondas = rondas.length;
-            const totalHoyos = totalRondas * 18;
-            
-            let totalFairways = 0;
-            let totalGIR = 0;
-            let totalPutts = 0;
-            let totalUpDown = 0;
-            let totalScore = 0;
-
-            rondas.forEach(ronda => {
-                totalScore += ronda.score;
-                ronda.hoyos.forEach(hoyo => {
-                    if (hoyo.fairway) totalFairways++;
-                    if (hoyo.gir) totalGIR++;
-                    totalPutts += hoyo.putts;
-                    if (hoyo.updown) totalUpDown++;
-                });
-            });
-
-            const promedioScore = (totalScore / totalRondas).toFixed(1);
-            const porcentajeFairways = ((totalFairways / totalHoyos) * 100).toFixed(1);
-            const porcentajeGIR = ((totalGIR / totalHoyos) * 100).toFixed(1);
-            const promedioPutts = (totalPutts / totalHoyos).toFixed(1);
-            const porcentajeUpDown = ((totalUpDown / totalHoyos) * 100).toFixed(1);
-
-            document.getElementById('stats-summary').innerHTML = `
-                <div class="stat-card">
-                    <div class="stat-value">${promedioScore}</div>
-                    <div class="stat-label">Score Promedio</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value">${porcentajeFairways}%</div>
-                    <div class="stat-label">Fairways</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value">${porcentajeGIR}%</div>
-                    <div class="stat-label">GIR</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value">${promedioPutts}</div>
-                    <div class="stat-label">Putts por Hoyo</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value">${porcentajeUpDown}%</div>
-                    <div class="stat-label">Up & Down</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value">${totalRondas}</div>
-                    <div class="stat-label">Rondas Jugadas</div>
-                </div>
-            `;
-        }
-
-        function mostrarHistorial() {
-            const roundsList = document.getElementById('rounds-list');
-            
-            if (rondas.length === 0) {
-                roundsList.innerHTML = '<p>No hay rondas registradas aún.</p>';
-                return;
-            }
-
-            roundsList.innerHTML = '';
-            
-            // Ordenar rondas por fecha (más reciente primero)
-            const rondasOrdenadas = [...rondas].sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
-            
-            rondasOrdenadas.forEach(ronda => {
-                const fairways = ronda.hoyos.filter(h => h.fairway).length;
-                const girs = ronda.hoyos.filter(h => h.gir).length;
-                const putts = ronda.hoyos.reduce((sum, h) => sum + h.putts, 0);
-                const updowns = ronda.hoyos.filter(h => h.updown).length;
-
-                const roundItem = document.createElement('div');
-                roundItem.className = 'round-item';
-                roundItem.innerHTML = `
-                    <div class="round-header">
-                        <div>
-                            <strong>${new Date(ronda.fecha).toLocaleDateString('es-ES')}</strong> - ${ronda.campo}
-                            ${ronda.tipo === 'torneo' ? '<span class="tournament-badge">TORNEO</span>' : ''}
-                            ${ronda.nombreTorneo ? `<br><em style="color: #666; font-size: 0.9em;">🏆 ${ronda.nombreTorneo}</em>` : ''}
-                        </div>
-                        <div style="font-size: 1.5em; font-weight: bold; color: #1e3c72;">
-                            ${ronda.score}
-                        </div>
-                    </div>
-                    ${ronda.companeros ? `<div style="margin: 5px 0; color: #666;"><strong>👥 Jugó con:</strong> ${ronda.companeros}</div>` : ''}
-                    <div class="round-stats">
-                        <div><strong>Fairways:</strong> ${fairways}/18 (${((fairways/18)*100).toFixed(1)}%)</div>
-                        <div><strong>GIR:</strong> ${girs}/18 (${((girs/18)*100).toFixed(1)}%)</div>
-                        <div><strong>Putts:</strong> ${putts} (${(putts/18).toFixed(1)} promedio)</div>
-                        <div><strong>Up & Down:</strong> ${updowns}/18 (${((updowns/18)*100).toFixed(1)}%)</div>
-                    </div>
-                    ${ronda.observaciones ? `
-                        <div style="margin-top: 15px; padding: 10px; background: #f0f8ff; border-radius: 8px; border-left: 4px solid #1e3c72;">
-                            <strong>📝 Observaciones:</strong><br>
-                            <em style="color: #333;">${ronda.observaciones}</em>
-                        </div>
-                    ` : ''}
-                    <div style="margin-top: 10px;">
-                        <button class="scorecard-button" onclick="mostrarScorecard(${ronda.id})">📋 Ver Scorecard Detallado</button>
-                    </div>
-                    ${ronda.enlace ? `<div style="margin-top: 10px;"><a href="${ronda.enlace}" target="_blank">🔗 Ver resultados completos</a></div>` : ''}
-                    ${ronda.foto ? `<div style="margin-top: 10px;"><img src="${ronda.foto}" style="max-width: 200px; border-radius: 5px; cursor: pointer;" onclick="mostrarFoto('${ronda.foto}')"></div>` : ''}
-                `;
-                roundsList.appendChild(roundItem);
-            });
-        }
-
-        function mostrarFoto(src) {
-            const modal = document.createElement('div');
-            modal.style.cssText = `
-                position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-                background: rgba(0,0,0,0.8); display: flex; justify-content: center; 
-                align-items: center; z-index: 1000; cursor: pointer;
-            `;
-            modal.innerHTML = `<img src="${src}" style="max-width: 90%; max-height: 90%; border-radius: 10px;">`;
-            modal.onclick = () => document.body.removeChild(modal);
-            document.body.appendChild(modal);
-        }
-
-        // Funciones para gráficos
-        function actualizarGraficos() {
-            if (rondas.length === 0) return;
-
-            const period = document.getElementById('periodFilter').value;
-            let rondasFiltradas = [...rondas].sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
-            
-            if (period !== 'all') {
-                rondasFiltradas = rondasFiltradas.slice(-parseInt(period));
-            }
-
-            // Destruir gráficos existentes
-            if (scoreChart) scoreChart.destroy();
-            if (statsChart) statsChart.destroy();
-
-            // Gráfico de Score
-            const scoreCtx = document.getElementById('scoreChart').getContext('2d');
-            scoreChart = new Chart(scoreCtx, {
-                type: 'line',
-                data: {
-                    labels: rondasFiltradas.map(r => new Date(r.fecha).toLocaleDateString('es-ES')),
-                    datasets: [{
-                        label: 'Score',
-                        data: rondasFiltradas.map(r => r.score),
-                        borderColor: '#1e3c72',
-                        backgroundColor: 'rgba(30, 60, 114, 0.1)',
-                        tension: 0.4,
-                        fill: true
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        title: {
-                            display: true,
-                            text: 'Evolución del Score'
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: false,
-                            reverse: true // Score más bajo es mejor
-                        }
-                    }
-                }
-            });
-
-            // Gráfico de estadísticas
-            const statsCtx = document.getElementById('statsChart').getContext('2d');
-            
-            const fairwayData = rondasFiltradas.map(r => {
-                const fairways = r.hoyos.filter(h => h.fairway).length;
-                return (fairways / 18 * 100).toFixed(1);
-            });
-            
-            const girData = rondasFiltradas.map(r => {
-                const girs = r.hoyos.filter(h => h.gir).length;
-                return (girs / 18 * 100).toFixed(1);
-            });
-
-            const puttsData = rondasFiltradas.map(r => {
-                const putts = r.hoyos.reduce((sum, h) => sum + h.putts, 0);
-                return (putts / 18).toFixed(1);
-            });
-
-            statsChart = new Chart(statsCtx, {
-                type: 'line',
-                data: {
-                    labels: rondasFiltradas.map(r => new Date(r.fecha).toLocaleDateString('es-ES')),
-                    datasets: [{
-                        label: 'Fairways (%)',
-                        data: fairwayData,
-                        borderColor: '#28a745',
-                        backgroundColor: 'rgba(40, 167, 69, 0.1)',
-                        yAxisID: 'y'
-                    }, {
-                        label: 'GIR (%)',
-                        data: girData,
-                        borderColor: '#17a2b8',
-                        backgroundColor: 'rgba(23, 162, 184, 0.1)',
-                        yAxisID: 'y'
-                    }, {
-                        label: 'Putts por hoyo',
-                        data: puttsData,
-                        borderColor: '#ffc107',
-                        backgroundColor: 'rgba(255, 193, 7, 0.1)',
-                        yAxisID: 'y1'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        title: {
-                            display: true,
-                            text: 'Evolución de Estadísticas Clave'
-                        }
-                    },
-                    scales: {
-                        y: {
-                            type: 'linear',
-                            display: true,
-                            position: 'left',
-                            title: {
-                                display: true,
-                                text: 'Porcentaje (%)'
-                            }
-                        },
-                        y1: {
-                            type: 'linear',
-                            display: true,
-                            position: 'right',
-                            title: {
-                                display: true,
-                                text: 'Putts por hoyo'
-                            },
-                            grid: {
-                                drawOnChartArea: false,
-                            },
-                        }
-                    }
-                }
-            });
-        }
-
-        // Funciones para metas
-        async function guardarMetas() {
-            const metaScore = document.getElementById('metaScore');
-            const metaFairways = document.getElementById('metaFairways');
-            const metaGIR = document.getElementById('metaGIR');
-            const metaPutts = document.getElementById('metaPutts');
-            const objetivoMes = document.getElementById('objetivoMes');
-            
-            if (!metaScore || !metaFairways || !metaGIR || !metaPutts || !objetivoMes) return;
-            
-            metas = {
-                score: parseFloat(metaScore.value) || null,
-                fairways: parseFloat(metaFairways.value) || null,
-                gir: parseFloat(metaGIR.value) || null,
-                putts: parseFloat(metaPutts.value) || null,
-                objetivo: objetivoMes.value || ''
-            };
-            
-            try {
-                await guardarDatosEnFirebase();
-                alert('¡Metas guardadas exitosamente! 🎯');
-                actualizarProgresoMetas();
-            } catch (error) {
-                console.error('Error al guardar metas:', error);
-                localStorage.setItem('golfMetas', JSON.stringify(metas));
-                alert('Metas guardadas localmente. Se sincronizarán cuando se restaure la conexión.');
-                actualizarProgresoMetas();
-            }
-        }
-
-        function cargarMetas() {
-            const campos = [
-                { id: 'metaScore', valor: metas.score },
-                { id: 'metaFairways', valor: metas.fairways },
-                { id: 'metaGIR', valor: metas.gir },
-                { id: 'metaPutts', valor: metas.putts },
-                { id: 'objetivoMes', valor: metas.objetivo }
-            ];
-            
-            campos.forEach(campo => {
-                const elemento = document.getElementById(campo.id);
-                if (elemento && campo.valor) {
-                    elemento.value = campo.valor;
-                }
-            });
-        }
-
-        function actualizarProgresoMetas() {
-            const progresoDiv = document.getElementById('progreso-metas');
-            
-            if (!progresoDiv || Object.keys(metas).length === 0 || rondas.length === 0) {
-                if (progresoDiv) progresoDiv.innerHTML = '<p>Define tus metas para ver tu progreso.</p>';
-                return;
-            }
-
-            // Calcular estadísticas actuales
-            const totalRondas = rondas.length;
-            const totalHoyos = totalRondas * 18;
-            
-            let totalFairways = 0;
-            let totalGIR = 0;
-            let totalPutts = 0;
-            let totalScore = 0;
-
-            rondas.forEach(ronda => {
-                totalScore += ronda.score;
-                if (ronda.hoyos) {
-                    ronda.hoyos.forEach(hoyo => {
-                        if (hoyo.fairway) totalFairways++;
-                        if (hoyo.gir) totalGIR++;
-                        totalPutts += hoyo.putts || 0;
-                    });
-                }
-            });
-
-            const promedioScore = totalScore / totalRondas;
-            const porcentajeFairways = (totalFairways / totalHoyos) * 100;
-            const porcentajeGIR = (totalGIR / totalHoyos) * 100;
-            const promedioPutts = totalPutts / totalHoyos;
-
-            let html = '<h3>🏆 Progreso hacia las Metas</h3>';
-
-            // Score
-            if (metas.score) {
-                const progreso = Math.min(100, Math.max(0, ((metas.score + 10 - promedioScore) / 10) * 100));
-                const status = promedioScore <= metas.score ? 'alcanzado' : 
-                             promedioScore <= metas.score + 3 ? 'progreso' : 'pendiente';
-                
-                html += `
-                    <div class="meta-card">
-                        <div class="meta-header">
-                            <strong>Score Promedio</strong>
-                            <span class="meta-status ${status}">
-                                ${promedioScore.toFixed(1)} / ${metas.score}
-                            </span>
-                        </div>
-                        <div class="progress-bar">
-                            <div class="progress-fill ${status === 'pendiente' ? 'red' : status === 'progreso' ? 'yellow' : ''}" 
-                                 style="width: ${progreso}%">
-                                ${progreso.toFixed(0)}%
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }
-
-            // Fairways
-            if (metas.fairways) {
-                const progreso = Math.min(100, (porcentajeFairways / metas.fairways) * 100);
-                const status = porcentajeFairways >= metas.fairways ? 'alcanzado' : 
-                             porcentajeFairways >= metas.fairways * 0.8 ? 'progreso' : 'pendiente';
-                
-                html += `
-                    <div class="meta-card">
-                        <div class="meta-header">
-                            <strong>Fairways</strong>
-                            <span class="meta-status ${status}">
-                                ${porcentajeFairways.toFixed(1)}% / ${metas.fairways}%
-                            </span>
-                        </div>
-                        <div class="progress-bar">
-                            <div class="progress-fill ${status === 'pendiente' ? 'red' : status === 'progreso' ? 'yellow' : ''}" 
-                                 style="width: ${progreso}%">
-                                ${progreso.toFixed(0)}%
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }
-
-            // GIR
-            if (metas.gir) {
-                const progreso = Math.min(100, (porcentajeGIR / metas.gir) * 100);
-                const status = porcentajeGIR >= metas.gir ? 'alcanzado' : 
-                             porcentajeGIR >= metas.gir * 0.8 ? 'progreso' : 'pendiente';
-                
-                html += `
-                    <div class="meta-card">
-                        <div class="meta-header">
-                            <strong>Green in Regulation</strong>
-                            <span class="meta-status ${status}">
-                                ${porcentajeGIR.toFixed(1)}% / ${metas.gir}%
-                            </span>
-                        </div>
-                        <div class="progress-bar">
-                            <div class="progress-fill ${status === 'pendiente' ? 'red' : status === 'progreso' ? 'yellow' : ''}" 
-                                 style="width: ${progreso}%">
-                                ${progreso.toFixed(0)}%
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }
-
-            // Putts
-            if (metas.putts) {
-                const progreso = Math.min(100, Math.max(0, ((3 - promedioPutts) / (3 - metas.putts)) * 100));
-                const status = promedioPutts <= metas.putts ? 'alcanzado' : 
-                             promedioPutts <= metas.putts + 0.2 ? 'progreso' : 'pendiente';
-                
-                html += `
-                    <div class="meta-card">
-                        <div class="meta-header">
-                            <strong>Putts por Hoyo</strong>
-                            <span class="meta-status ${status}">
-                                ${promedioPutts.toFixed(2)} / ${metas.putts}
-                            </span>
-                        </div>
-                        <div class="progress-bar">
-                            <div class="progress-fill ${status === 'pendiente' ? 'red' : status === 'progreso' ? 'yellow' : ''}" 
-                                 style="width: ${progreso}%">
-                                ${progreso.toFixed(0)}%
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }
-
-            if (metas.objetivo) {
-                html += `
-                    <div class="meta-card">
-                        <h4>🎯 Objetivo del Mes</h4>
-                        <p>${metas.objetivo}</p>
-                    </div>
-                `;
-            }
-
-            progresoDiv.innerHTML = html;
-        }
-
-        // Función para exportar datos
-        function exportarDatos() {
-            if (rondas.length === 0) {
-                alert('No hay datos para exportar');
-                return;
-            }
-
-            // Crear reporte completo
-            let reporte = `REPORTE DE GOLF - ALONSO\n`;
-            reporte += `Generado: ${new Date().toLocaleDateString('es-ES')}\n`;
-            reporte += `=====================================\n\n`;
-
-            // Estadísticas generales
-            const totalRondas = rondas.length;
-            const totalHoyos = totalRondas * 18;
-            
-            let totalFairways = 0;
-            let totalGIR = 0;
-            let totalPutts = 0;
-            let totalUpDown = 0;
-            let totalScore = 0;
-
-            rondas.forEach(ronda => {
-                totalScore += ronda.score;
-                ronda.hoyos.forEach(hoyo => {
-                    if (hoyo.fairway) totalFairways++;
-                    if (hoyo.gir) totalGIR++;
-                    totalPutts += hoyo.putts;
-                    if (hoyo.updown) totalUpDown++;
-                });
-            });
-
-            const promedioScore = (totalScore / totalRondas).toFixed(1);
-            const porcentajeFairways = ((totalFairways / totalHoyos) * 100).toFixed(1);
-            const porcentajeGIR = ((totalGIR / totalHoyos) * 100).toFixed(1);
-            const promedioPutts = (totalPutts / totalHoyos).toFixed(2);
-            const porcentajeUpDown = ((totalUpDown / totalHoyos) * 100).toFixed(1);
-
-            reporte += `ESTADÍSTICAS GENERALES:\n`;
-            reporte += `- Rondas jugadas: ${totalRondas}\n`;
-            reporte += `- Score promedio: ${promedioScore}\n`;
-            reporte += `- Fairways: ${porcentajeFairways}% (${totalFairways}/${totalHoyos})\n`;
-            reporte += `- GIR: ${porcentajeGIR}% (${totalGIR}/${totalHoyos})\n`;
-            reporte += `- Putts por hoyo: ${promedioPutts}\n`;
-            reporte += `- Up & Down: ${porcentajeUpDown}% (${totalUpDown}/${totalHoyos})\n\n`;
-
-            // Metas actuales
-            if (Object.keys(metas).length > 0) {
-                reporte += `METAS ESTABLECIDAS:\n`;
-                if (metas.score) reporte += `- Score objetivo: ${metas.score}\n`;
-                if (metas.fairways) reporte += `- Fairways objetivo: ${metas.fairways}%\n`;
-                if (metas.gir) reporte += `- GIR objetivo: ${metas.gir}%\n`;
-                if (metas.putts) reporte += `- Putts objetivo: ${metas.putts} por hoyo\n`;
-                if (metas.objetivo) reporte += `- Objetivo del mes: ${metas.objetivo}\n`;
-                reporte += `\n`;
-            }
-
-            // Historial detallado
-            reporte += `HISTORIAL DE RONDAS:\n`;
-            reporte += `=====================================\n`;
-            
-            const rondasOrdenadas = [...rondas].sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
-            
-            rondasOrdenadas.forEach((ronda, index) => {
-                const fairways = ronda.hoyos.filter(h => h.fairway).length;
-                const girs = ronda.hoyos.filter(h => h.gir).length;
-                const putts = ronda.hoyos.reduce((sum, h) => sum + h.putts, 0);
-                const updowns = ronda.hoyos.filter(h => h.updown).length;
-
-                reporte += `${index + 1}. ${new Date(ronda.fecha).toLocaleDateString('es-ES')} - ${ronda.campo}\n`;
-                reporte += `   Tipo: ${ronda.tipo} | Score: ${ronda.score}\n`;
-                if (ronda.nombreTorneo) reporte += `   Torneo: ${ronda.nombreTorneo}\n`;
-                if (ronda.companeros) reporte += `   Compañeros: ${ronda.companeros}\n`;
-                reporte += `   Fairways: ${fairways}/18 (${((fairways/18)*100).toFixed(1)}%)\n`;
-                reporte += `   GIR: ${girs}/18 (${((girs/18)*100).toFixed(1)}%)\n`;
-                reporte += `   Putts: ${putts} (${(putts/18).toFixed(1)} promedio)\n`;
-                reporte += `   Up & Down: ${updowns}/18 (${((updowns/18)*100).toFixed(1)}%)\n`;
-                if (ronda.observaciones) reporte += `   Observaciones: ${ronda.observaciones}\n`;
-                if (ronda.enlace) reporte += `   Resultados: ${ronda.enlace}\n`;
-                reporte += `\n`;
-            });
-
-            // Crear archivo y descargarlo
-            const blob = new Blob([reporte], { type: 'text/plain;charset=utf-8' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `Reporte_Golf_Alonso_${new Date().toISOString().split('T')[0]}.txt`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            window.URL.revokeObjectURL(url);
-
-            alert('📤 Reporte exportado exitosamente! El archivo se ha descargado y está listo para enviar al coach.');
-        }
-
-        function mostrarScorecard(rondaId) {
-            const ronda = rondas.find(r => r.id === rondaId);
-            if (!ronda) return;
-
-            let html = `
-                <div class="scorecard-modal" onclick="cerrarScorecard(event)">
-                    <div class="scorecard-content" onclick="event.stopPropagation()">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                            <h3>📋 Scorecard Detallado</h3>
-                            <button onclick="cerrarScorecard()" style="background: none; border: none; font-size: 24px; cursor: pointer;">×</button>
-                        </div>
-                        
-                        <div style="margin-bottom: 15px;">
-                            <strong>Fecha:</strong> ${new Date(ronda.fecha).toLocaleDateString('es-ES')}<br>
-                            <strong>Campo:</strong> ${ronda.campo}<br>
-                            ${ronda.nombreTorneo ? `<strong>Torneo:</strong> ${ronda.nombreTorneo}<br>` : ''}
-                            <strong>Score Total:</strong> ${ronda.score}
-                        </div>
-
-                        <table class="scorecard-table">
-                            <thead>
-                                <tr>
-                                    <th>Hoyo</th>
-                                    <th>Par</th>
-                                    <th>Score</th>
-                                    <th>+/-</th>
-                                    <th>FW</th>
-                                    <th>GIR</th>
-                                    <th>Putts</th>
-                                    <th>U&D</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-            `;
-
-            let totalPar = 0;
-            ronda.hoyos.forEach(hoyo => {
-                const diferencia = hoyo.score - hoyo.par;
-                const diferenciaText = diferencia > 0 ? `+${diferencia}` : diferencia === 0 ? 'E' : diferencia.toString();
-                
-                let scoreClass = '';
-                if (diferencia <= -2) scoreClass = 'eagle';
-                else if (diferencia === -1) scoreClass = 'birdie';
-                else if (diferencia === 1) scoreClass = 'bogey';
-                else if (diferencia >= 2) scoreClass = 'double-bogey';
-
-                totalPar += hoyo.par;
-
-                html += `
-                    <tr>
-                        <td><strong>${hoyo.hoyo}</strong></td>
-                        <td>${hoyo.par}</td>
-                        <td class="${scoreClass}"><strong>${hoyo.score}</strong></td>
-                        <td class="${scoreClass}">${diferenciaText}</td>
-                        <td>${hoyo.fairway ? '✓' : '✗'}</td>
-                        <td>${hoyo.gir ? '✓' : '✗'}</td>
-                        <td>${hoyo.putts}</td>
-                        <td>${hoyo.updown ? '✓' : '✗'}</td>
-                    </tr>
-                `;
-            });
-
-            const totalDiferencia = ronda.score - totalPar;
-            const totalDiferenciaText = totalDiferencia > 0 ? `+${totalDiferencia}` : totalDiferencia === 0 ? 'E' : totalDiferencia.toString();
-
-            html += `
-                            </tbody>
-                            <tfoot>
-                                <tr style="background: #f8f9fa; font-weight: bold;">
-                                    <td>TOTAL</td>
-                                    <td>${totalPar}</td>
-                                    <td>${ronda.score}</td>
-                                    <td>${totalDiferenciaText}</td>
-                                    <td>${ronda.hoyos.filter(h => h.fairway).length}/18</td>
-                                    <td>${ronda.hoyos.filter(h => h.gir).length}/18</td>
-                                    <td>${ronda.hoyos.reduce((sum, h) => sum + h.putts, 0)}</td>
-                                    <td>${ronda.hoyos.filter(h => h.updown).length}/18</td>
-                                </tr>
-                            </tfoot>
-                        </table>
-
-                        <div style="margin-top: 15px; font-size: 12px; color: #666;">
-                            <strong>Leyenda:</strong> 
-                            <span style="background: #cce7ff; padding: 2px 4px;">Eagle</span>
-                            <span style="background: #d4edda; padding: 2px 4px;">Birdie</span>
-                            <span style="background: #fff3cd; padding: 2px 4px;">Bogey</span>
-                            <span style="background: #f8d7da; padding: 2px 4px;">Doble Bogey+</span>
-                        </div>
-                    </div>
-                </div>
-            `;
-
-            document.body.insertAdjacentHTML('beforeend', html);
-        }
-
-        function cerrarScorecard(event) {
-            if (event && event.target.className !== 'scorecard-modal') return;
-            const modal = document.querySelector('.scorecard-modal');
-            if (modal) {
-                document.body.removeChild(modal);
-            }
-        }
-    </script>
-</body>
-</html>
