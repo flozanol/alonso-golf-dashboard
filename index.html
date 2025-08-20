@@ -283,6 +283,11 @@
         <div class="header">
             <h1>🏌️‍♂️ Golf Stats Pro</h1>
             <p>Dashboard de Estadísticas de Golf - Alonso</p>
+            <div style="margin-top: 10px;">
+                <button id="sync-button" class="btn" onclick="intentarReconectar()" style="display: none; font-size: 14px; padding: 8px 16px;">
+                    🔄 Reintentar Conexión
+                </button>
+            </div>
         </div>
 
         <div class="tabs">
@@ -428,29 +433,52 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 
     <script>
-        // CONFIGURACIÓN DE FIREBASE
+        // CONFIGURACIÓN DE FIREBASE - ACTUALIZADA
         const firebaseConfig = {
-            apiKey: "AIzaSyDjcWXUWbUmLwyqL6dH5ImR1OrepoVTx4w",
-            authDomain: "golf-stats-alonso.firebaseapp.com",
-            databaseURL: "https://golf-stats-alonso-default-rtdb.firebaseio.com",
-            projectId: "golf-stats-alonso",
-            storageBucket: "golf-stats-alonso.firebasestorage.app",
-            messagingSenderId: "377808587062",
-            appId: "1:377808587062:web:6cfc7a2aeac5301f830b97"
+            apiKey: "AIzaSyDtVZRkftMlzuqy_iNrN72rwb1bmLQe3ds",
+            authDomain: "golf-stats-alonso-79c2c.firebaseapp.com",
+            projectId: "golf-stats-alonso-79c2c",
+            storageBucket: "golf-stats-alonso-79c2c.firebasestorage.app",
+            messagingSenderId: "660259821284",
+            appId: "1:660259821284:web:559ce2cc1cc2202daa3ef1"
         };
 
-        // Inicializar Firebase
+        // Inicializar Firebase con mejor manejo de errores
         let db = null;
         let firebaseEnabled = false;
 
-        try {
-            firebase.initializeApp(firebaseConfig);
-            db = firebase.firestore();
-            firebaseEnabled = true;
-            console.log('Firebase inicializado correctamente');
-        } catch (error) {
-            console.log('Firebase no disponible, usando solo localStorage');
-            firebaseEnabled = false;
+        function inicializarFirebase() {
+            try {
+                console.log('Intentando inicializar Firebase...');
+                
+                // Verificar que Firebase esté disponible
+                if (typeof firebase === 'undefined') {
+                    throw new Error('Firebase SDK no cargado');
+                }
+                
+                firebase.initializeApp(firebaseConfig);
+                db = firebase.firestore();
+                
+                console.log('Firebase inicializado, probando conexión...');
+                
+                // Probar conexión
+                return db.collection('test').limit(1).get()
+                    .then(() => {
+                        firebaseEnabled = true;
+                        console.log('✅ Firebase conectado exitosamente');
+                        mostrarNotificacion('🌐 Conectado a la nube', 'success');
+                        return true;
+                    })
+                    .catch((error) => {
+                        throw new Error('Error de conexión: ' + error.message);
+                    });
+                    
+            } catch (error) {
+                console.log('❌ Error al inicializar Firebase:', error.message);
+                firebaseEnabled = false;
+                mostrarNotificacion('📱 Modo offline - datos guardados localmente', 'warning');
+                return Promise.resolve(false);
+            }
         }
 
         // Variables globales - localStorage como base principal
@@ -479,19 +507,26 @@
             
             console.log('Dashboard listo!');
             
-            // Intentar sincronizar con Firebase en segundo plano
-            if (firebaseEnabled) {
-                setTimeout(() => {
-                    sincronizarConFirebase();
-                }, 2000); // Esperar 2 segundos para no interferir con la UI
-            }
+            // Inicializar Firebase con mejor manejo
+            setTimeout(() => {
+                inicializarFirebase()
+                    .then((conectado) => {
+                        if (conectado) {
+                            sincronizarConFirebase();
+                        }
+                    });
+            }, 1000);
         });
 
         // Funciones de sincronización con Firebase
         async function sincronizarConFirebase() {
-            if (!firebaseEnabled) return;
+            if (!firebaseEnabled) {
+                console.log('Firebase no habilitado, saltando sincronización');
+                return;
+            }
             
-            console.log('Sincronizando con Firebase...');
+            console.log('🔄 Sincronizando con Firebase...');
+            mostrarNotificacion('🔄 Sincronizando...', 'info');
             
             try {
                 // Verificar si hay datos en Firebase
@@ -502,11 +537,12 @@
                     const rondasFirebase = userData.rondas || [];
                     const metasFirebase = userData.metas || {};
                     
-                    console.log('Firebase tiene:', rondasFirebase.length, 'rondas');
+                    console.log('📊 Datos en Firebase:', rondasFirebase.length, 'rondas');
+                    console.log('📊 Datos locales:', rondas.length, 'rondas');
                     
                     // Comparar y fusionar datos (mantener el conjunto más completo)
                     if (rondasFirebase.length > rondas.length) {
-                        console.log('Actualizando con datos de Firebase');
+                        console.log('⬇️ Descargando datos de Firebase...');
                         rondas = rondasFirebase;
                         metas = metasFirebase;
                         
@@ -521,24 +557,53 @@
                         
                         mostrarNotificacion('📥 Datos actualizados desde la nube', 'success');
                     } else if (rondas.length > rondasFirebase.length) {
-                        console.log('Subiendo datos locales a Firebase');
+                        console.log('⬆️ Subiendo datos locales a Firebase...');
                         await subirDatosAFirebase();
                         mostrarNotificacion('📤 Datos subidos a la nube', 'success');
                     } else {
-                        console.log('Datos sincronizados');
+                        console.log('✅ Datos ya sincronizados');
                         mostrarNotificacion('✅ Sincronizado con la nube', 'success');
                     }
                 } else {
                     // Crear documento inicial con datos locales
-                    console.log('Creando documento inicial en Firebase');
+                    console.log('🆕 Creando documento inicial en Firebase...');
                     await crearDocumentoInicial();
                     mostrarNotificacion('🆕 Cuenta creada en la nube', 'success');
                 }
                 
             } catch (error) {
-                console.log('Error al sincronizar con Firebase:', error);
-                mostrarNotificacion('⚠️ Modo offline - datos guardados localmente', 'warning');
+                console.error('❌ Error detallado de Firebase:', error);
+                console.error('❌ Código de error:', error.code);
+                console.error('❌ Mensaje:', error.message);
+                
+                firebaseEnabled = false; // Deshabilitar para futuras operaciones
+                
+                // Mostrar botón de reconexión
+                document.getElementById('sync-button').style.display = 'inline-block';
+                
+                let mensajeError = 'Error de conexión con la nube';
+                if (error.code === 'permission-denied') {
+                    mensajeError = 'Sin permisos - verifica reglas de Firestore';
+                } else if (error.code === 'unavailable') {
+                    mensajeError = 'Servicio no disponible - verifica internet';
+                }
+                
+                mostrarNotificacion(`⚠️ ${mensajeError}`, 'warning');
             }
+        }
+
+        function intentarReconectar() {
+            console.log('🔄 Reintentando conexión a Firebase...');
+            document.getElementById('sync-button').style.display = 'none';
+            
+            inicializarFirebase()
+                .then((conectado) => {
+                    if (conectado) {
+                        sincronizarConFirebase();
+                    } else {
+                        document.getElementById('sync-button').style.display = 'inline-block';
+                    }
+                });
         }
 
         async function subirDatosAFirebase() {
