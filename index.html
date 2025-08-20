@@ -609,6 +609,8 @@
 
         // Inicializar cuando la página carga
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('Página cargada, inicializando...');
+            
             // Cargar datos del localStorage
             rondas = JSON.parse(localStorage.getItem('golfRondas')) || [];
             metas = JSON.parse(localStorage.getItem('golfMetas')) || {};
@@ -617,10 +619,13 @@
             document.getElementById('fecha').value = new Date().toISOString().split('T')[0];
             
             // Inicializar UI
+            console.log('Generando tabla de hoyos...');
             generarTablaHoyos();
             actualizarEstadisticas();
             mostrarHistorial();
             cargarMetas();
+            
+            console.log('Inicialización completa');
         });
 
         function selectMood(mood, element) {
