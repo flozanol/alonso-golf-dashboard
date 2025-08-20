@@ -423,32 +423,189 @@
         </div>
     </div>
 
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
     <script>
-        // Variables globales - SOLO localStorage
+        // CONFIGURACIÓN DE FIREBASE
+        const firebaseConfig = {
+            apiKey: "AIzaSyDjcWXUWbUmLwyqL6dH5ImR1OrepoVTx4w",
+            authDomain: "golf-stats-alonso.firebaseapp.com",
+            databaseURL: "https://golf-stats-alonso-default-rtdb.firebaseio.com",
+            projectId: "golf-stats-alonso",
+            storageBucket: "golf-stats-alonso.firebasestorage.app",
+            messagingSenderId: "377808587062",
+            appId: "1:377808587062:web:6cfc7a2aeac5301f830b97"
+        };
+
+        // Inicializar Firebase
+        let db = null;
+        let firebaseEnabled = false;
+
+        try {
+            firebase.initializeApp(firebaseConfig);
+            db = firebase.firestore();
+            firebaseEnabled = true;
+            console.log('Firebase inicializado correctamente');
+        } catch (error) {
+            console.log('Firebase no disponible, usando solo localStorage');
+            firebaseEnabled = false;
+        }
+
+        // Variables globales - localStorage como base principal
         let rondas = [];
         let metas = {};
+        const userId = 'alonso';
         
         // Inicializar la aplicación inmediatamente
         document.addEventListener('DOMContentLoaded', function() {
             console.log('Iniciando dashboard...');
             
-            // Cargar datos del localStorage
+            // Cargar datos del localStorage PRIMERO (inmediato)
             rondas = JSON.parse(localStorage.getItem('golfRondas')) || [];
             metas = JSON.parse(localStorage.getItem('golfMetas')) || {};
             
-            console.log('Datos cargados:', rondas.length, 'rondas');
+            console.log('Datos locales cargados:', rondas.length, 'rondas');
             
             // Configurar fecha actual
             document.getElementById('fecha').value = new Date().toISOString().split('T')[0];
             
-            // Inicializar UI
+            // Inicializar UI inmediatamente
             generarHoyos();
             actualizarEstadisticas();
             mostrarHistorial();
             cargarMetas();
             
             console.log('Dashboard listo!');
+            
+            // Intentar sincronizar con Firebase en segundo plano
+            if (firebaseEnabled) {
+                setTimeout(() => {
+                    sincronizarConFirebase();
+                }, 2000); // Esperar 2 segundos para no interferir con la UI
+            }
         });
+
+        // Funciones de sincronización con Firebase
+        async function sincronizarConFirebase() {
+            if (!firebaseEnabled) return;
+            
+            console.log('Sincronizando con Firebase...');
+            
+            try {
+                // Verificar si hay datos en Firebase
+                const userDoc = await db.collection('usuarios').doc(userId).get();
+                
+                if (userDoc.exists) {
+                    const userData = userDoc.data();
+                    const rondasFirebase = userData.rondas || [];
+                    const metasFirebase = userData.metas || {};
+                    
+                    console.log('Firebase tiene:', rondasFirebase.length, 'rondas');
+                    
+                    // Comparar y fusionar datos (mantener el conjunto más completo)
+                    if (rondasFirebase.length > rondas.length) {
+                        console.log('Actualizando con datos de Firebase');
+                        rondas = rondasFirebase;
+                        metas = metasFirebase;
+                        
+                        // Actualizar localStorage
+                        localStorage.setItem('golfRondas', JSON.stringify(rondas));
+                        localStorage.setItem('golfMetas', JSON.stringify(metas));
+                        
+                        // Actualizar UI
+                        actualizarEstadisticas();
+                        mostrarHistorial();
+                        cargarMetas();
+                        
+                        mostrarNotificacion('📥 Datos actualizados desde la nube', 'success');
+                    } else if (rondas.length > rondasFirebase.length) {
+                        console.log('Subiendo datos locales a Firebase');
+                        await subirDatosAFirebase();
+                        mostrarNotificacion('📤 Datos subidos a la nube', 'success');
+                    } else {
+                        console.log('Datos sincronizados');
+                        mostrarNotificacion('✅ Sincronizado con la nube', 'success');
+                    }
+                } else {
+                    // Crear documento inicial con datos locales
+                    console.log('Creando documento inicial en Firebase');
+                    await crearDocumentoInicial();
+                    mostrarNotificacion('🆕 Cuenta creada en la nube', 'success');
+                }
+                
+            } catch (error) {
+                console.log('Error al sincronizar con Firebase:', error);
+                mostrarNotificacion('⚠️ Modo offline - datos guardados localmente', 'warning');
+            }
+        }
+
+        async function subirDatosAFirebase() {
+            if (!firebaseEnabled) return;
+            
+            try {
+                await db.collection('usuarios').doc(userId).update({
+                    rondas: rondas,
+                    metas: metas,
+                    ultimaActualizacion: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                console.log('Datos subidos a Firebase exitosamente');
+            } catch (error) {
+                console.log('Error al subir datos a Firebase:', error);
+                throw error;
+            }
+        }
+
+        async function crearDocumentoInicial() {
+            if (!firebaseEnabled) return;
+            
+            try {
+                await db.collection('usuarios').doc(userId).set({
+                    nombre: 'Alonso',
+                    fechaCreacion: firebase.firestore.FieldValue.serverTimestamp(),
+                    rondas: rondas,
+                    metas: metas
+                });
+                console.log('Documento inicial creado en Firebase');
+            } catch (error) {
+                console.log('Error al crear documento inicial:', error);
+                throw error;
+            }
+        }
+
+        function mostrarNotificacion(mensaje, tipo = 'info') {
+            // Crear notificación temporal
+            const notificacion = document.createElement('div');
+            notificacion.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 15px 20px;
+                border-radius: 10px;
+                color: white;
+                font-weight: bold;
+                z-index: 1000;
+                transition: opacity 0.3s ease;
+                ${tipo === 'success' ? 'background: #28a745;' : ''}
+                ${tipo === 'warning' ? 'background: #ffc107; color: #333;' : ''}
+                ${tipo === 'error' ? 'background: #dc3545;' : ''}
+                ${tipo === 'info' ? 'background: #17a2b8;' : ''}
+            `;
+            notificacion.textContent = mensaje;
+            
+            document.body.appendChild(notificacion);
+            
+            // Remover después de 4 segundos
+            setTimeout(() => {
+                notificacion.style.opacity = '0';
+                setTimeout(() => {
+                    if (document.body.contains(notificacion)) {
+                        document.body.removeChild(notificacion);
+                    }
+                }, 300);
+            }, 4000);
+        }
 
         function switchTab(tabName, tabElement) {
             console.log('Cambiando a:', tabName);
@@ -615,12 +772,25 @@
 
         function completarGuardado(ronda) {
             rondas.push(ronda);
+            
+            // Guardar en localStorage inmediatamente
             localStorage.setItem('golfRondas', JSON.stringify(rondas));
             
             alert('¡Ronda guardada exitosamente! 🎉');
             limpiarFormulario();
             actualizarEstadisticas();
             mostrarHistorial();
+            
+            // Subir a Firebase en segundo plano
+            if (firebaseEnabled) {
+                subirDatosAFirebase()
+                    .then(() => {
+                        mostrarNotificacion('☁️ Ronda sincronizada con la nube', 'success');
+                    })
+                    .catch(() => {
+                        mostrarNotificacion('⚠️ Ronda guardada localmente, se sincronizará más tarde', 'warning');
+                    });
+            }
         }
 
         function limpiarFormulario() {
@@ -768,8 +938,20 @@
                 objetivo: document.getElementById('objetivoMes').value || ''
             };
             
+            // Guardar en localStorage inmediatamente
             localStorage.setItem('golfMetas', JSON.stringify(metas));
             alert('¡Metas guardadas exitosamente! 🎯');
+            
+            // Subir a Firebase en segundo plano
+            if (firebaseEnabled) {
+                subirDatosAFirebase()
+                    .then(() => {
+                        mostrarNotificacion('☁️ Metas sincronizadas con la nube', 'success');
+                    })
+                    .catch(() => {
+                        mostrarNotificacion('⚠️ Metas guardadas localmente, se sincronizarán más tarde', 'warning');
+                    });
+            }
         }
 
         function cargarMetas() {
@@ -788,6 +970,7 @@
 
             let reporte = `REPORTE DE GOLF - ALONSO\n`;
             reporte += `Generado: ${new Date().toLocaleDateString('es-ES')}\n`;
+            reporte += `Acceso en línea: https://tu-dashboard-url.com\n`;
             reporte += `=====================================\n\n`;
 
             const totalRondas = rondas.length;
@@ -859,6 +1042,9 @@
                 reporte += `\n`;
             });
 
+            reporte += `\nNOTA: Para ver gráficos y análisis detallados, acceder al dashboard en línea.\n`;
+            reporte += `Los datos se sincronizan automáticamente entre todos los dispositivos.\n`;
+
             const blob = new Blob([reporte], { type: 'text/plain;charset=utf-8' });
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -869,7 +1055,7 @@
             document.body.removeChild(a);
             window.URL.revokeObjectURL(url);
 
-            alert('📤 Reporte exportado exitosamente! El archivo se ha descargado y está listo para enviar al coach.');
+            alert('📤 Reporte exportado! El archivo incluye la URL del dashboard para que el coach pueda acceder en línea.');
         }
 
         function mostrarFoto(src) {
