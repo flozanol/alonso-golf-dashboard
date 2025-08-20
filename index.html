@@ -141,7 +141,7 @@
 
         .hole-stats {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: 1fr 1fr 1fr;
             gap: 8px;
         }
 
@@ -157,7 +157,7 @@
             color: #666;
         }
 
-        .hole-stat input {
+        .hole-stat input, .hole-stat select {
             width: 60px;
             padding: 5px;
             text-align: center;
@@ -334,6 +334,83 @@
             color: #721c24;
         }
 
+        .scorecard-button {
+            background: linear-gradient(135deg, #6c757d, #5a6268);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-top: 10px;
+            transition: transform 0.2s ease;
+        }
+
+        .scorecard-button:hover {
+            transform: translateY(-1px);
+        }
+
+        .scorecard-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .scorecard-content {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            max-width: 90%;
+            max-height: 90%;
+            overflow-y: auto;
+        }
+
+        .scorecard-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        .scorecard-table th,
+        .scorecard-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .scorecard-table th {
+            background: #1e3c72;
+            color: white;
+        }
+
+        .scorecard-table .birdie {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .scorecard-table .eagle {
+            background: #cce7ff;
+            color: #004085;
+        }
+
+        .scorecard-table .bogey {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .scorecard-table .double-bogey {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
         @media (max-width: 768px) {
             .tabs {
                 flex-direction: column;
@@ -345,6 +422,15 @@
             
             .holes-grid {
                 grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .scorecard-table {
+                font-size: 12px;
+            }
+            
+            .scorecard-table th,
+            .scorecard-table td {
+                padding: 4px;
             }
         }
     </style>
@@ -421,6 +507,7 @@
                 </div>
 
                 <h3>📊 Estadísticas por Hoyo</h3>
+                <p style="color: #666; margin-bottom: 15px;">💡 El score total se calculará automáticamente sumando todos los hoyos</p>
                 <div class="holes-grid" id="holes-grid">
                     <!-- Los hoyos se generarán dinámicamente -->
                 </div>
@@ -546,7 +633,23 @@
             mostrarHistorial();
             cargarMetas();
             actualizarProgresoMetas();
+            
+            // Agregar listeners para actualizar score total automáticamente
+            setTimeout(() => {
+                for (let i = 1; i <= 18; i++) {
+                    document.getElementById(`score-${i}`).addEventListener('input', calcularScoreTotal);
+                }
+            }, 100);
         });
+
+        function calcularScoreTotal() {
+            let total = 0;
+            for (let i = 1; i <= 18; i++) {
+                const score = parseInt(document.getElementById(`score-${i}`).value) || 0;
+                total += score;
+            }
+            document.getElementById('score').value = total > 0 ? total : '';
+        }
 
         function switchTab(tabName) {
             // Ocultar todos los contenidos
@@ -585,6 +688,18 @@
                 holeCard.innerHTML = `
                     <h4>Hoyo ${i}</h4>
                     <div class="hole-stats">
+                        <div class="hole-stat">
+                            <label>Score</label>
+                            <input type="number" id="score-${i}" min="1" max="10" value="4">
+                        </div>
+                        <div class="hole-stat">
+                            <label>Par</label>
+                            <select id="par-${i}">
+                                <option value="3">3</option>
+                                <option value="4" selected>4</option>
+                                <option value="5">5</option>
+                            </select>
+                        </div>
                         <div class="hole-stat">
                             <label>Fairway</label>
                             <input type="checkbox" id="fairway-${i}">
@@ -629,8 +744,23 @@
             const enlace = document.getElementById('enlace').value;
             const observaciones = document.getElementById('observaciones').value;
             
-            if (!fecha || !campo || !score) {
+            if (!fecha || !campo) {
                 alert('Por favor completa los campos obligatorios');
+                return;
+            }
+
+            // Validar que al menos algunos hoyos tengan score
+            let hayScores = false;
+            for (let i = 1; i <= 18; i++) {
+                const score = parseInt(document.getElementById(`score-${i}`).value);
+                if (score && score > 0) {
+                    hayScores = true;
+                    break;
+                }
+            }
+            
+            if (!hayScores) {
+                alert('Por favor ingresa el score de al menos algunos hoyos');
                 return;
             }
 
@@ -648,19 +778,32 @@
             };
 
             // Recopilar datos de cada hoyo
+            let scoreTotal = 0;
             for (let i = 1; i <= 18; i++) {
+                const score = parseInt(document.getElementById(`score-${i}`).value) || 4;
+                const par = parseInt(document.getElementById(`par-${i}`).value) || 4;
                 const fairway = document.getElementById(`fairway-${i}`).checked;
                 const gir = document.getElementById(`gir-${i}`).checked;
                 const putts = parseInt(document.getElementById(`putts-${i}`).value) || 2;
                 const updown = document.getElementById(`updown-${i}`).checked;
 
+                scoreTotal += score;
+
                 ronda.hoyos.push({
                     hoyo: i,
+                    score,
+                    par,
                     fairway,
                     gir,
                     putts,
                     updown
                 });
+            }
+
+            // Actualizar score total si no se había ingresado manualmente
+            if (!score || score === 0) {
+                ronda.score = scoreTotal;
+                document.getElementById('score').value = scoreTotal;
             }
 
             // Guardar la foto si existe
@@ -697,6 +840,8 @@
             
             // Limpiar hoyos
             for (let i = 1; i <= 18; i++) {
+                document.getElementById(`score-${i}`).value = 4;
+                document.getElementById(`par-${i}`).value = 4;
                 document.getElementById(`fairway-${i}`).checked = false;
                 document.getElementById(`gir-${i}`).checked = false;
                 document.getElementById(`putts-${i}`).value = 2;
@@ -808,6 +953,9 @@
                             <em style="color: #333;">${ronda.observaciones}</em>
                         </div>
                     ` : ''}
+                    <div style="margin-top: 10px;">
+                        <button class="scorecard-button" onclick="mostrarScorecard(${ronda.id})">📋 Ver Scorecard Detallado</button>
+                    </div>
                     ${ronda.enlace ? `<div style="margin-top: 10px;"><a href="${ronda.enlace}" target="_blank">🔗 Ver resultados completos</a></div>` : ''}
                     ${ronda.foto ? `<div style="margin-top: 10px;"><img src="${ronda.foto}" style="max-width: 200px; border-radius: 5px; cursor: pointer;" onclick="mostrarFoto('${ronda.foto}')"></div>` : ''}
                 `;
@@ -1210,6 +1358,109 @@
             window.URL.revokeObjectURL(url);
 
             alert('📤 Reporte exportado exitosamente! El archivo se ha descargado y está listo para enviar al coach.');
+        }
+
+        function mostrarScorecard(rondaId) {
+            const ronda = rondas.find(r => r.id === rondaId);
+            if (!ronda) return;
+
+            let html = `
+                <div class="scorecard-modal" onclick="cerrarScorecard(event)">
+                    <div class="scorecard-content" onclick="event.stopPropagation()">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                            <h3>📋 Scorecard Detallado</h3>
+                            <button onclick="cerrarScorecard()" style="background: none; border: none; font-size: 24px; cursor: pointer;">×</button>
+                        </div>
+                        
+                        <div style="margin-bottom: 15px;">
+                            <strong>Fecha:</strong> ${new Date(ronda.fecha).toLocaleDateString('es-ES')}<br>
+                            <strong>Campo:</strong> ${ronda.campo}<br>
+                            ${ronda.nombreTorneo ? `<strong>Torneo:</strong> ${ronda.nombreTorneo}<br>` : ''}
+                            <strong>Score Total:</strong> ${ronda.score}
+                        </div>
+
+                        <table class="scorecard-table">
+                            <thead>
+                                <tr>
+                                    <th>Hoyo</th>
+                                    <th>Par</th>
+                                    <th>Score</th>
+                                    <th>+/-</th>
+                                    <th>FW</th>
+                                    <th>GIR</th>
+                                    <th>Putts</th>
+                                    <th>U&D</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+            `;
+
+            let totalPar = 0;
+            ronda.hoyos.forEach(hoyo => {
+                const diferencia = hoyo.score - hoyo.par;
+                const diferenciaText = diferencia > 0 ? `+${diferencia}` : diferencia === 0 ? 'E' : diferencia.toString();
+                
+                let scoreClass = '';
+                if (diferencia <= -2) scoreClass = 'eagle';
+                else if (diferencia === -1) scoreClass = 'birdie';
+                else if (diferencia === 1) scoreClass = 'bogey';
+                else if (diferencia >= 2) scoreClass = 'double-bogey';
+
+                totalPar += hoyo.par;
+
+                html += `
+                    <tr>
+                        <td><strong>${hoyo.hoyo}</strong></td>
+                        <td>${hoyo.par}</td>
+                        <td class="${scoreClass}"><strong>${hoyo.score}</strong></td>
+                        <td class="${scoreClass}">${diferenciaText}</td>
+                        <td>${hoyo.fairway ? '✓' : '✗'}</td>
+                        <td>${hoyo.gir ? '✓' : '✗'}</td>
+                        <td>${hoyo.putts}</td>
+                        <td>${hoyo.updown ? '✓' : '✗'}</td>
+                    </tr>
+                `;
+            });
+
+            const totalDiferencia = ronda.score - totalPar;
+            const totalDiferenciaText = totalDiferencia > 0 ? `+${totalDiferencia}` : totalDiferencia === 0 ? 'E' : totalDiferencia.toString();
+
+            html += `
+                            </tbody>
+                            <tfoot>
+                                <tr style="background: #f8f9fa; font-weight: bold;">
+                                    <td>TOTAL</td>
+                                    <td>${totalPar}</td>
+                                    <td>${ronda.score}</td>
+                                    <td>${totalDiferenciaText}</td>
+                                    <td>${ronda.hoyos.filter(h => h.fairway).length}/18</td>
+                                    <td>${ronda.hoyos.filter(h => h.gir).length}/18</td>
+                                    <td>${ronda.hoyos.reduce((sum, h) => sum + h.putts, 0)}</td>
+                                    <td>${ronda.hoyos.filter(h => h.updown).length}/18</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+
+                        <div style="margin-top: 15px; font-size: 12px; color: #666;">
+                            <strong>Leyenda:</strong> 
+                            <span style="background: #cce7ff; padding: 2px 4px;">Eagle</span>
+                            <span style="background: #d4edda; padding: 2px 4px;">Birdie</span>
+                            <span style="background: #fff3cd; padding: 2px 4px;">Bogey</span>
+                            <span style="background: #f8d7da; padding: 2px 4px;">Doble Bogey+</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.body.insertAdjacentHTML('beforeend', html);
+        }
+
+        function cerrarScorecard(event) {
+            if (event && event.target.className !== 'scorecard-modal') return;
+            const modal = document.querySelector('.scorecard-modal');
+            if (modal) {
+                document.body.removeChild(modal);
+            }
         }
     </script>
 </body>
