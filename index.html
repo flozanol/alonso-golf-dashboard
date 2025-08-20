@@ -341,7 +341,10 @@
     <div class="container">
         <div class="header">
             <h1>🏌️‍♂️ Golf Stats Pro</h1>
-            <p>Dashboard de Estadísticas de Golf - Alonso (Modo Local)</p>
+            <p>Dashboard de Estadísticas de Golf - Alonso</p>
+            <div id="connection-status" style="margin-top: 10px; padding: 5px; border-radius: 5px; font-size: 14px;">
+                🔄 Conectando...
+            </div>
         </div>
 
         <div class="tabs">
@@ -485,29 +488,199 @@
         </div>
     </div>
 
+    <!-- Firebase Scripts -->
+    <script type="module">
+        // Import Firebase modules
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getFirestore, doc, getDoc, setDoc, updateDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDtVZRkftMlzuqy_iNrN72rwb1bmLQe3ds",
+            authDomain: "golf-stats-alonso-79c2c.firebaseapp.com",
+            projectId: "golf-stats-alonso-79c2c",
+            storageBucket: "golf-stats-alonso-79c2c.firebasestorage.app",
+            messagingSenderId: "660259821284",
+            appId: "1:660259821284:web:559ce2cc1cc2202daa3ef1"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        
+        // Make Firebase globally available
+        window.firebase = { db, doc, getDoc, setDoc, updateDoc };
+        window.firebaseReady = true;
+        
+        console.log('Firebase initialized successfully');
+        updateConnectionStatus('🌐 Conectado a la nube', 'success');
+        
+        // Initialize app after Firebase is ready
+        if (window.initializeApp) {
+            window.initializeApp();
+        }
+    </script>
+
     <script>
         // Variables globales
         let rondas = [];
         let metas = {};
+        const userId = 'alonso';
+        let firebaseReady = false;
 
-        // Inicializar cuando el DOM esté listo
-        document.addEventListener('DOMContentLoaded', function() {
+        // Function to update connection status
+        function updateConnectionStatus(message, type) {
+            const statusDiv = document.getElementById('connection-status');
+            if (statusDiv) {
+                statusDiv.textContent = message;
+                statusDiv.style.background = type === 'success' ? '#d4edda' : 
+                                           type === 'error' ? '#f8d7da' : '#d1ecf1';
+                statusDiv.style.color = type === 'success' ? '#155724' : 
+                                       type === 'error' ? '#721c24' : '#0c5460';
+            }
+        }
+
+        // Initialize app function
+        window.initializeApp = function() {
             console.log('Iniciando Golf Stats Pro...');
             
-            // Cargar datos del localStorage
+            // Load data from localStorage first
             rondas = JSON.parse(localStorage.getItem('golfRondas')) || [];
             metas = JSON.parse(localStorage.getItem('golfMetas')) || {};
             
-            // Configurar fecha actual
+            // Set current date
             document.getElementById('fecha').value = new Date().toISOString().split('T')[0];
             
-            // Inicializar UI
+            // Initialize UI
             generarTablaHoyos();
             actualizarEstadisticas();
             mostrarHistorial();
             cargarMetas();
             
             console.log('Dashboard listo!');
+            
+            // Sync with Firebase if available
+            if (window.firebaseReady) {
+                syncWithFirebase();
+            }
+        };
+
+        // Firebase sync functions
+        async function syncWithFirebase() {
+            if (!window.firebase) {
+                console.log('Firebase not ready');
+                return;
+            }
+
+            try {
+                updateConnectionStatus('🔄 Sincronizando...', 'info');
+                
+                const { db, doc, getDoc, setDoc, updateDoc } = window.firebase;
+                const userDocRef = doc(db, 'usuarios', userId);
+                const userDoc = await getDoc(userDocRef);
+
+                if (userDoc.exists()) {
+                    const userData = userDoc.data();
+                    const firebaseRondas = userData.rondas || [];
+                    const firebaseMetas = userData.metas || {};
+
+                    // Compare data and sync
+                    if (firebaseRondas.length > rondas.length) {
+                        // Download from Firebase
+                        rondas = firebaseRondas;
+                        metas = firebaseMetas;
+                        localStorage.setItem('golfRondas', JSON.stringify(rondas));
+                        localStorage.setItem('golfMetas', JSON.stringify(metas));
+                        
+                        // Update UI
+                        actualizarEstadisticas();
+                        mostrarHistorial();
+                        cargarMetas();
+                        
+                        updateConnectionStatus('📥 Datos actualizados desde la nube', 'success');
+                    } else if (rondas.length > firebaseRondas.length) {
+                        // Upload to Firebase
+                        await updateDoc(userDocRef, {
+                            rondas: rondas,
+                            metas: metas,
+                            lastUpdated: new Date()
+                        });
+                        updateConnectionStatus('📤 Datos subidos a la nube', 'success');
+                    } else {
+                        updateConnectionStatus('✅ Sincronizado con la nube', 'success');
+                    }
+                } else {
+                    // Create new user document
+                    await setDoc(userDocRef, {
+                        nombre: 'Alonso',
+                        createdAt: new Date(),
+                        rondas: rondas,
+                        metas: metas
+                    });
+                    updateConnectionStatus('🆕 Cuenta creada en la nube', 'success');
+                }
+            } catch (error) {
+                console.error('Firebase sync error:', error);
+                updateConnectionStatus('⚠️ Error de sincronización - datos guardados localmente', 'error');
+            }
+        }
+
+        async function saveToFirebase() {
+            if (!window.firebase) return;
+
+            try {
+                const { db, doc, updateDoc } = window.firebase;
+                const userDocRef = doc(db, 'usuarios', userId);
+                
+                await updateDoc(userDocRef, {
+                    rondas: rondas,
+                    metas: metas,
+                    lastUpdated: new Date()
+                });
+                
+                updateConnectionStatus('☁️ Guardado en la nube', 'success');
+            } catch (error) {
+                console.error('Save to Firebase error:', error);
+                updateConnectionStatus('⚠️ Error guardando - datos en local', 'error');
+            }
+        }
+
+        // Initialize when DOM is ready
+        document.addEventListener('DOMContentLoaded', function() {
+            updateConnectionStatus('🔄 Inicializando...', 'info');
+            
+            // If Firebase is already ready, initialize immediately
+            if (window.firebaseReady) {
+                initializeApp();
+            } else {
+                // Otherwise, initialize with local data and wait for Firebase
+                console.log('Iniciando en modo local...');
+                
+                rondas = JSON.parse(localStorage.getItem('golfRondas')) || [];
+                metas = JSON.parse(localStorage.getItem('golfMetas')) || {};
+                
+                document.getElementById('fecha').value = new Date().toISOString().split('T')[0];
+                
+                generarTablaHoyos();
+                actualizarEstadisticas();
+                mostrarHistorial();
+                cargarMetas();
+                
+                updateConnectionStatus('📱 Modo local - esperando conexión', 'info');
+                
+                // Check for Firebase every second for up to 10 seconds
+                let attempts = 0;
+                const checkFirebase = setInterval(() => {
+                    attempts++;
+                    if (window.firebaseReady) {
+                        clearInterval(checkFirebase);
+                        syncWithFirebase();
+                    } else if (attempts >= 10) {
+                        clearInterval(checkFirebase);
+                        updateConnectionStatus('📱 Modo offline - datos guardados localmente', 'error');
+                    }
+                }, 1000);
+            }
         });
 
         function switchTab(tabName, tabElement) {
@@ -869,6 +1042,9 @@
             limpiarFormulario();
             actualizarEstadisticas();
             mostrarHistorial();
+            
+            // Save to Firebase in background
+            saveToFirebase();
         }
 
         function limpiarFormulario() {
@@ -1035,6 +1211,9 @@
             
             localStorage.setItem('golfMetas', JSON.stringify(metas));
             alert('¡Metas guardadas exitosamente! 🎯');
+            
+            // Save to Firebase in background
+            saveToFirebase();
         }
 
         function cargarMetas() {
