@@ -670,8 +670,21 @@
         
         // Inicializar la aplicación
         document.addEventListener('DOMContentLoaded', function() {
-            actualizarEstadoSync('cargando');
-            cargarDatosDelUsuario();
+            console.log('Iniciando aplicación...');
+            document.getElementById('fecha').value = new Date().toISOString().split('T')[0];
+            
+            // Primero cargar datos locales inmediatamente
+            rondas = JSON.parse(localStorage.getItem('golfRondas')) || [];
+            metas = JSON.parse(localStorage.getItem('golfMetas')) || {};
+            
+            // Inicializar UI inmediatamente
+            inicializarUI();
+            actualizarEstadoSync('synced');
+            
+            // Intentar conectar a Firebase en segundo plano
+            setTimeout(() => {
+                cargarDatosDelUsuario();
+            }, 1000);
         });
 
         // Funciones de base de datos
@@ -702,40 +715,57 @@
         }
 
         async function cargarDatosDelUsuario() {
-            actualizarEstadoSync('cargando');
+            console.log('Intentando conectar a Firebase...');
+            actualizarEstadoSync('syncing');
             
             try {
+                // Verificar si Firebase está disponible
+                if (!db) {
+                    throw new Error('Firebase no está disponible');
+                }
+                
                 const userDoc = await db.collection('usuarios').doc(userId).get();
                 
                 if (userDoc.exists) {
                     const userData = userDoc.data();
-                    rondas = userData.rondas || [];
-                    metas = userData.metas || {};
+                    const rondasFirebase = userData.rondas || [];
+                    const metasFirebase = userData.metas || {};
+                    
+                    // Solo actualizar si Firebase tiene más datos
+                    if (rondasFirebase.length > rondas.length) {
+                        rondas = rondasFirebase;
+                        metas = metasFirebase;
+                        localStorage.setItem('golfRondas', JSON.stringify(rondas));
+                        localStorage.setItem('golfMetas', JSON.stringify(metas));
+                        
+                        // Actualizar UI con nuevos datos
+                        actualizarEstadisticas();
+                        mostrarHistorial();
+                        cargarMetas();
+                        actualizarProgresoMetas();
+                    }
                 } else {
+                    // Crear documento inicial con datos locales
                     await db.collection('usuarios').doc(userId).set({
                         nombre: 'Alonso',
                         fechaCreacion: firebase.firestore.FieldValue.serverTimestamp(),
-                        rondas: [],
-                        metas: {}
+                        rondas: rondas,
+                        metas: metas
                     });
-                    rondas = [];
-                    metas = {};
                 }
 
                 await migrarDatosLocalStorage();
-                inicializarUI();
                 actualizarEstadoSync('synced');
+                console.log('Conectado a Firebase exitosamente');
             } catch (error) {
-                console.error('Error al cargar datos:', error);
-                rondas = JSON.parse(localStorage.getItem('golfRondas')) || [];
-                metas = JSON.parse(localStorage.getItem('golfMetas')) || {};
-                inicializarUI();
+                console.log('Error al conectar con Firebase, usando datos locales:', error.message);
                 actualizarEstadoSync('error');
+                // Los datos locales ya están cargados, no hacer nada más
             }
         }
 
         function inicializarUI() {
-            document.getElementById('fecha').value = new Date().toISOString().split('T')[0];
+            console.log('Inicializando UI con', rondas.length, 'rondas');
             generarHoyos();
             actualizarEstadisticas();
             mostrarHistorial();
@@ -767,41 +797,73 @@
             const rondasLocal = JSON.parse(localStorage.getItem('golfRondas')) || [];
             const metasLocal = JSON.parse(localStorage.getItem('golfMetas')) || {};
             
+            console.log('Verificando migración:', { rondasLocal: rondasLocal.length, metasLocal: Object.keys(metasLocal).length });
+            
             if (rondasLocal.length > 0 || Object.keys(metasLocal).length > 0) {
-                if (rondas.length === 0 && Object.keys(metas).length === 0) {
-                    rondas = rondasLocal;
-                    metas = metasLocal;
+                // Solo migrar si no hay datos en Firebase o Firebase tiene menos datos
+                if (rondas.length === 0 || rondasLocal.length > rondas.length) {
+                    console.log('Migrando datos locales...');
+                    
+                    // Mantener los datos con más información
+                    if (rondasLocal.length > rondas.length) {
+                        rondas = rondasLocal;
+                    }
+                    if (Object.keys(metasLocal).length > Object.keys(metas).length) {
+                        metas = metasLocal;
+                    }
                     
                     try {
                         await guardarDatosEnFirebase();
-                        localStorage.removeItem('golfRondas');
-                        localStorage.removeItem('golfMetas');
-                        alert('✅ Datos migrados exitosamente a la nube!');
+                        console.log('Datos migrados exitosamente a Firebase');
+                        
+                        // Actualizar UI después de la migración
+                        actualizarEstadisticas();
+                        mostrarHistorial();
+                        cargarMetas();
+                        actualizarProgresoMetas();
+                        
+                        // No eliminar localStorage inmediatamente, mantener como backup
+                        // localStorage.removeItem('golfRondas');
+                        // localStorage.removeItem('golfMetas');
+                        
                     } catch (error) {
-                        console.log('Error al migrar, manteniendo datos locales');
+                        console.log('Error al migrar a Firebase, manteniendo datos locales');
                     }
                 }
             }
         }
 
         function switchTab(tabName) {
+            console.log('Cambiando a pestaña:', tabName);
+            
+            // Remover clase active de todos los contenidos
             document.querySelectorAll('.content').forEach(content => {
                 content.classList.remove('active');
             });
             
+            // Remover clase active de todas las tabs
             document.querySelectorAll('.tab').forEach(tab => {
                 tab.classList.remove('active');
             });
             
-            document.getElementById(tabName).classList.add('active');
-            event.target.classList.add('active');
+            // Mostrar contenido seleccionado
+            const selectedContent = document.getElementById(tabName);
+            if (selectedContent) {
+                selectedContent.classList.add('active');
+            }
             
+            // Marcar tab como activa
+            if (event && event.target) {
+                event.target.classList.add('active');
+            }
+            
+            // Actualizar datos específicos de cada pestaña
             if (tabName === 'estadisticas') {
                 actualizarEstadisticas();
             } else if (tabName === 'historial') {
                 mostrarHistorial();
             } else if (tabName === 'graficos') {
-                actualizarGraficos();
+                setTimeout(() => actualizarGraficos(), 100); // Delay para que el canvas esté visible
             } else if (tabName === 'metas') {
                 actualizarProgresoMetas();
             }
@@ -809,6 +871,12 @@
 
         function generarHoyos() {
             const holesGrid = document.getElementById('holes-grid');
+            if (!holesGrid) {
+                console.error('No se encontró el elemento holes-grid');
+                return;
+            }
+            
+            console.log('Generando hoyos...');
             holesGrid.innerHTML = '';
             
             for (let i = 1; i <= 18; i++) {
@@ -849,15 +917,26 @@
                 `;
                 holesGrid.appendChild(holeCard);
             }
+            
+            console.log('Hoyos generados exitosamente');
+            
+            // Calcular score inicial
+            setTimeout(() => calcularScoreTotal(), 100);
         }
 
         function calcularScoreTotal() {
             let total = 0;
             for (let i = 1; i <= 18; i++) {
-                const score = parseInt(document.getElementById(`score-${i}`).value) || 0;
-                total += score;
+                const scoreInput = document.getElementById(`score-${i}`);
+                if (scoreInput) {
+                    const score = parseInt(scoreInput.value) || 0;
+                    total += score;
+                }
             }
-            document.getElementById('score').value = total > 0 ? total : '';
+            const scoreField = document.getElementById('score');
+            if (scoreField) {
+                scoreField.value = total > 0 ? total : '';
+            }
         }
 
         function previewPhoto(input) {
