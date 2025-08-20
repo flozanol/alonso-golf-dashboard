@@ -24,38 +24,6 @@
             padding: 20px;
         }
 
-        .sync-info {
-            background: white;
-            border-radius: 15px;
-            padding: 15px;
-            margin-bottom: 20px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .sync-status {
-            font-size: 14px;
-            color: #666;
-        }
-
-        .sync-status.syncing {
-            color: #ffc107;
-        }
-
-        .sync-status.synced {
-            color: #28a745;
-        }
-
-        .sync-status.error {
-            color: #dc3545;
-        }
-
-        .sync-status.offline {
-            color: #6c757d;
-        }
-
         .header {
             background: white;
             border-radius: 15px;
@@ -213,10 +181,6 @@
             transform: translateY(-2px);
         }
 
-        .btn-secondary {
-            background: #6c757d;
-        }
-
         .stats-summary {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -299,150 +263,6 @@
             font-weight: bold;
         }
 
-        .progress-bar {
-            background: #e0e0e0;
-            border-radius: 10px;
-            height: 20px;
-            margin: 5px 0;
-            overflow: hidden;
-        }
-
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(135deg, #28a745, #20c997);
-            border-radius: 10px;
-            transition: width 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: bold;
-            font-size: 12px;
-        }
-
-        .progress-fill.red {
-            background: linear-gradient(135deg, #dc3545, #c82333);
-        }
-
-        .progress-fill.yellow {
-            background: linear-gradient(135deg, #ffc107, #e0a800);
-            color: #333;
-        }
-
-        .meta-card {
-            background: #f8f9fa;
-            border-radius: 10px;
-            padding: 15px;
-            margin-bottom: 15px;
-            border-left: 5px solid #1e3c72;
-        }
-
-        .meta-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-
-        .meta-status {
-            padding: 5px 10px;
-            border-radius: 15px;
-            font-size: 12px;
-            font-weight: bold;
-        }
-
-        .meta-status.alcanzado {
-            background: #d4edda;
-            color: #155724;
-        }
-
-        .meta-status.progreso {
-            background: #fff3cd;
-            color: #856404;
-        }
-
-        .meta-status.pendiente {
-            background: #f8d7da;
-            color: #721c24;
-        }
-
-        .scorecard-button {
-            background: linear-gradient(135deg, #6c757d, #5a6268);
-            color: white;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 14px;
-            margin-top: 10px;
-            transition: transform 0.2s ease;
-        }
-
-        .scorecard-button:hover {
-            transform: translateY(-1px);
-        }
-
-        .scorecard-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.8);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-
-        .scorecard-content {
-            background: white;
-            border-radius: 15px;
-            padding: 20px;
-            max-width: 90%;
-            max-height: 90%;
-            overflow-y: auto;
-        }
-
-        .scorecard-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 15px;
-        }
-
-        .scorecard-table th,
-        .scorecard-table td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: center;
-            font-size: 14px;
-        }
-
-        .scorecard-table th {
-            background: #1e3c72;
-            color: white;
-        }
-
-        .scorecard-table .birdie {
-            background: #d4edda;
-            color: #155724;
-        }
-
-        .scorecard-table .eagle {
-            background: #cce7ff;
-            color: #004085;
-        }
-
-        .scorecard-table .bogey {
-            background: #fff3cd;
-            color: #856404;
-        }
-
-        .scorecard-table .double-bogey {
-            background: #f8d7da;
-            color: #721c24;
-        }
-
         @media (max-width: 768px) {
             .tabs {
                 flex-direction: column;
@@ -455,41 +275,21 @@
             .holes-grid {
                 grid-template-columns: repeat(2, 1fr);
             }
-            
-            .scorecard-table {
-                font-size: 12px;
-            }
-            
-            .scorecard-table th,
-            .scorecard-table td {
-                padding: 4px;
-            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="sync-info">
-            <div>
-                <div style="color: #1e3c72; font-weight: bold;">🏌️‍♂️ Golf Stats Pro - Dashboard de Alonso</div>
-                <div class="sync-status" id="sync-status">🔄 Cargando...</div>
-            </div>
-            <div style="font-size: 12px; color: #666;">
-                Datos guardados automáticamente en la nube
-            </div>
-        </div>
-
         <div class="header">
             <h1>🏌️‍♂️ Golf Stats Pro</h1>
             <p>Dashboard de Estadísticas de Golf - Alonso</p>
         </div>
 
         <div class="tabs">
-            <div class="tab active" onclick="switchTab('nueva-ronda')">Nueva Ronda</div>
-            <div class="tab" onclick="switchTab('estadisticas')">Estadísticas</div>
-            <div class="tab" onclick="switchTab('graficos')">Gráficos</div>
-            <div class="tab" onclick="switchTab('metas')">Metas</div>
-            <div class="tab" onclick="switchTab('historial')">Historial</div>
+            <div class="tab active" onclick="switchTab('nueva-ronda', this)">Nueva Ronda</div>
+            <div class="tab" onclick="switchTab('estadisticas', this)">Estadísticas</div>
+            <div class="tab" onclick="switchTab('metas', this)">Metas</div>
+            <div class="tab" onclick="switchTab('historial', this)">Historial</div>
         </div>
 
         <!-- Nueva Ronda -->
@@ -574,24 +374,6 @@
             </div>
         </div>
 
-        <!-- Gráficos -->
-        <div id="graficos" class="content">
-            <div class="card">
-                <h2>📊 Tendencias de Progreso</h2>
-                <div style="margin-bottom: 20px;">
-                    <label style="margin-right: 10px;">Mostrar últimas:</label>
-                    <select id="periodFilter" onchange="actualizarGraficos()">
-                        <option value="5">5 rondas</option>
-                        <option value="10">10 rondas</option>
-                        <option value="20">20 rondas</option>
-                        <option value="all">Todas las rondas</option>
-                    </select>
-                </div>
-                <canvas id="scoreChart" width="800" height="400" style="max-width: 100%; margin-bottom: 30px;"></canvas>
-                <canvas id="statsChart" width="800" height="400" style="max-width: 100%;"></canvas>
-            </div>
-        </div>
-
         <!-- Metas -->
         <div id="metas" class="content">
             <div class="card">
@@ -641,202 +423,37 @@
         </div>
     </div>
 
-    <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
-    
     <script>
-        // CONFIGURACIÓN DE FIREBASE
-        const firebaseConfig = {
-            apiKey: "AIzaSyDjcWXUWbUmLwyqL6dH5ImR1OrepoVTx4w",
-            authDomain: "golf-stats-alonso.firebaseapp.com",
-            databaseURL: "https://golf-stats-alonso-default-rtdb.firebaseio.com",
-            projectId: "golf-stats-alonso",
-            storageBucket: "golf-stats-alonso.firebasestorage.app",
-            messagingSenderId: "377808587062",
-            appId: "1:377808587062:web:6cfc7a2aeac5301f830b97"
-        };
-
-        // Inicializar Firebase
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
-
-        // Variables globales
+        // Variables globales - SOLO localStorage
         let rondas = [];
         let metas = {};
-        let scoreChart, statsChart;
-        const userId = 'alonso';
         
-        // Inicializar la aplicación
+        // Inicializar la aplicación inmediatamente
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('Iniciando aplicación...');
-            document.getElementById('fecha').value = new Date().toISOString().split('T')[0];
+            console.log('Iniciando dashboard...');
             
-            // Primero cargar datos locales inmediatamente
+            // Cargar datos del localStorage
             rondas = JSON.parse(localStorage.getItem('golfRondas')) || [];
             metas = JSON.parse(localStorage.getItem('golfMetas')) || {};
             
-            // Inicializar UI inmediatamente
-            inicializarUI();
-            actualizarEstadoSync('synced');
+            console.log('Datos cargados:', rondas.length, 'rondas');
             
-            // Intentar conectar a Firebase en segundo plano
-            setTimeout(() => {
-                cargarDatosDelUsuario();
-            }, 1000);
-        });
-
-        // Funciones de base de datos
-        function actualizarEstadoSync(estado) {
-            const statusDiv = document.getElementById('sync-status');
-            switch(estado) {
-                case 'cargando':
-                    statusDiv.textContent = '🔄 Cargando datos...';
-                    statusDiv.className = 'sync-status syncing';
-                    break;
-                case 'syncing':
-                    statusDiv.textContent = '🔄 Guardando en la nube...';
-                    statusDiv.className = 'sync-status syncing';
-                    break;
-                case 'synced':
-                    statusDiv.textContent = '✅ Datos sincronizados';
-                    statusDiv.className = 'sync-status synced';
-                    break;
-                case 'error':
-                    statusDiv.textContent = '❌ Error - usando datos locales';
-                    statusDiv.className = 'sync-status error';
-                    break;
-                case 'offline':
-                    statusDiv.textContent = '📱 Modo offline';
-                    statusDiv.className = 'sync-status offline';
-                    break;
-            }
-        }
-
-        async function cargarDatosDelUsuario() {
-            console.log('Intentando conectar a Firebase...');
-            actualizarEstadoSync('syncing');
+            // Configurar fecha actual
+            document.getElementById('fecha').value = new Date().toISOString().split('T')[0];
             
-            try {
-                // Verificar si Firebase está disponible
-                if (!db) {
-                    throw new Error('Firebase no está disponible');
-                }
-                
-                const userDoc = await db.collection('usuarios').doc(userId).get();
-                
-                if (userDoc.exists) {
-                    const userData = userDoc.data();
-                    const rondasFirebase = userData.rondas || [];
-                    const metasFirebase = userData.metas || {};
-                    
-                    // Solo actualizar si Firebase tiene más datos
-                    if (rondasFirebase.length > rondas.length) {
-                        rondas = rondasFirebase;
-                        metas = metasFirebase;
-                        localStorage.setItem('golfRondas', JSON.stringify(rondas));
-                        localStorage.setItem('golfMetas', JSON.stringify(metas));
-                        
-                        // Actualizar UI con nuevos datos
-                        actualizarEstadisticas();
-                        mostrarHistorial();
-                        cargarMetas();
-                        actualizarProgresoMetas();
-                    }
-                } else {
-                    // Crear documento inicial con datos locales
-                    await db.collection('usuarios').doc(userId).set({
-                        nombre: 'Alonso',
-                        fechaCreacion: firebase.firestore.FieldValue.serverTimestamp(),
-                        rondas: rondas,
-                        metas: metas
-                    });
-                }
-
-                await migrarDatosLocalStorage();
-                actualizarEstadoSync('synced');
-                console.log('Conectado a Firebase exitosamente');
-            } catch (error) {
-                console.log('Error al conectar con Firebase, usando datos locales:', error.message);
-                actualizarEstadoSync('error');
-                // Los datos locales ya están cargados, no hacer nada más
-            }
-        }
-
-        function inicializarUI() {
-            console.log('Inicializando UI con', rondas.length, 'rondas');
+            // Inicializar UI
             generarHoyos();
             actualizarEstadisticas();
             mostrarHistorial();
             cargarMetas();
-            actualizarProgresoMetas();
-        }
+            
+            console.log('Dashboard listo!');
+        });
 
-        async function guardarDatosEnFirebase() {
-            actualizarEstadoSync('syncing');
+        function switchTab(tabName, tabElement) {
+            console.log('Cambiando a:', tabName);
             
-            try {
-                await db.collection('usuarios').doc(userId).update({
-                    rondas: rondas,
-                    metas: metas,
-                    ultimaActualizacion: firebase.firestore.FieldValue.serverTimestamp()
-                });
-                
-                actualizarEstadoSync('synced');
-            } catch (error) {
-                console.error('Error al guardar datos:', error);
-                localStorage.setItem('golfRondas', JSON.stringify(rondas));
-                localStorage.setItem('golfMetas', JSON.stringify(metas));
-                actualizarEstadoSync('offline');
-                throw error;
-            }
-        }
-
-        async function migrarDatosLocalStorage() {
-            const rondasLocal = JSON.parse(localStorage.getItem('golfRondas')) || [];
-            const metasLocal = JSON.parse(localStorage.getItem('golfMetas')) || {};
-            
-            console.log('Verificando migración:', { rondasLocal: rondasLocal.length, metasLocal: Object.keys(metasLocal).length });
-            
-            if (rondasLocal.length > 0 || Object.keys(metasLocal).length > 0) {
-                // Solo migrar si no hay datos en Firebase o Firebase tiene menos datos
-                if (rondas.length === 0 || rondasLocal.length > rondas.length) {
-                    console.log('Migrando datos locales...');
-                    
-                    // Mantener los datos con más información
-                    if (rondasLocal.length > rondas.length) {
-                        rondas = rondasLocal;
-                    }
-                    if (Object.keys(metasLocal).length > Object.keys(metas).length) {
-                        metas = metasLocal;
-                    }
-                    
-                    try {
-                        await guardarDatosEnFirebase();
-                        console.log('Datos migrados exitosamente a Firebase');
-                        
-                        // Actualizar UI después de la migración
-                        actualizarEstadisticas();
-                        mostrarHistorial();
-                        cargarMetas();
-                        actualizarProgresoMetas();
-                        
-                        // No eliminar localStorage inmediatamente, mantener como backup
-                        // localStorage.removeItem('golfRondas');
-                        // localStorage.removeItem('golfMetas');
-                        
-                    } catch (error) {
-                        console.log('Error al migrar a Firebase, manteniendo datos locales');
-                    }
-                }
-            }
-        }
-
-        function switchTab(tabName) {
-            console.log('Cambiando a pestaña:', tabName);
-            
-            // Remover clase active de todos los contenidos
+            // Ocultar todos los contenidos
             document.querySelectorAll('.content').forEach(content => {
                 content.classList.remove('active');
             });
@@ -847,36 +464,19 @@
             });
             
             // Mostrar contenido seleccionado
-            const selectedContent = document.getElementById(tabName);
-            if (selectedContent) {
-                selectedContent.classList.add('active');
-            }
+            document.getElementById(tabName).classList.add('active');
+            tabElement.classList.add('active');
             
-            // Marcar tab como activa
-            if (event && event.target) {
-                event.target.classList.add('active');
-            }
-            
-            // Actualizar datos específicos de cada pestaña
+            // Actualizar datos si es necesario
             if (tabName === 'estadisticas') {
                 actualizarEstadisticas();
             } else if (tabName === 'historial') {
                 mostrarHistorial();
-            } else if (tabName === 'graficos') {
-                setTimeout(() => actualizarGraficos(), 100); // Delay para que el canvas esté visible
-            } else if (tabName === 'metas') {
-                actualizarProgresoMetas();
             }
         }
 
         function generarHoyos() {
             const holesGrid = document.getElementById('holes-grid');
-            if (!holesGrid) {
-                console.error('No se encontró el elemento holes-grid');
-                return;
-            }
-            
-            console.log('Generando hoyos...');
             holesGrid.innerHTML = '';
             
             for (let i = 1; i <= 18; i++) {
@@ -887,7 +487,7 @@
                     <div class="hole-stats">
                         <div class="hole-stat">
                             <label>Score</label>
-                            <input type="number" id="score-${i}" min="1" max="10" value="4" onchange="calcularScoreTotal()">
+                            <input type="number" id="score-${i}" min="1" max="10" value="4" oninput="calcularScoreTotal()">
                         </div>
                         <div class="hole-stat">
                             <label>Par</label>
@@ -918,10 +518,8 @@
                 holesGrid.appendChild(holeCard);
             }
             
-            console.log('Hoyos generados exitosamente');
-            
-            // Calcular score inicial
-            setTimeout(() => calcularScoreTotal(), 100);
+            console.log('18 hoyos generados');
+            calcularScoreTotal();
         }
 
         function calcularScoreTotal() {
@@ -949,3 +547,342 @@
                 };
                 reader.readAsDataURL(input.files[0]);
             }
+        }
+
+        function guardarRonda() {
+            const fecha = document.getElementById('fecha').value;
+            const campo = document.getElementById('campo').value;
+            const tipo = document.getElementById('tipo').value;
+            const nombreTorneo = document.getElementById('nombreTorneo').value;
+            const companeros = document.getElementById('companeros').value;
+            const enlace = document.getElementById('enlace').value;
+            const observaciones = document.getElementById('observaciones').value;
+            
+            if (!fecha || !campo) {
+                alert('Por favor completa los campos obligatorios');
+                return;
+            }
+
+            const ronda = {
+                id: Date.now(),
+                fecha,
+                campo,
+                tipo,
+                nombreTorneo,
+                companeros,
+                enlace,
+                observaciones,
+                hoyos: []
+            };
+
+            let scoreTotal = 0;
+            for (let i = 1; i <= 18; i++) {
+                const score = parseInt(document.getElementById(`score-${i}`).value) || 4;
+                const par = parseInt(document.getElementById(`par-${i}`).value) || 4;
+                const fairway = document.getElementById(`fairway-${i}`).checked;
+                const gir = document.getElementById(`gir-${i}`).checked;
+                const putts = parseInt(document.getElementById(`putts-${i}`).value) || 2;
+                const updown = document.getElementById(`updown-${i}`).checked;
+
+                scoreTotal += score;
+
+                ronda.hoyos.push({
+                    hoyo: i,
+                    score,
+                    par,
+                    fairway,
+                    gir,
+                    putts,
+                    updown
+                });
+            }
+
+            ronda.score = scoreTotal;
+
+            // Guardar foto si existe
+            const fotoInput = document.getElementById('foto');
+            if (fotoInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    ronda.foto = e.target.result;
+                    completarGuardado(ronda);
+                };
+                reader.readAsDataURL(fotoInput.files[0]);
+            } else {
+                completarGuardado(ronda);
+            }
+        }
+
+        function completarGuardado(ronda) {
+            rondas.push(ronda);
+            localStorage.setItem('golfRondas', JSON.stringify(rondas));
+            
+            alert('¡Ronda guardada exitosamente! 🎉');
+            limpiarFormulario();
+            actualizarEstadisticas();
+            mostrarHistorial();
+        }
+
+        function limpiarFormulario() {
+            document.getElementById('fecha').value = new Date().toISOString().split('T')[0];
+            document.getElementById('campo').value = '';
+            document.getElementById('nombreTorneo').value = '';
+            document.getElementById('companeros').value = '';
+            document.getElementById('enlace').value = '';
+            document.getElementById('observaciones').value = '';
+            document.getElementById('foto').value = '';
+            document.getElementById('photo-preview').style.display = 'none';
+            
+            for (let i = 1; i <= 18; i++) {
+                document.getElementById(`score-${i}`).value = 4;
+                document.getElementById(`par-${i}`).value = 4;
+                document.getElementById(`fairway-${i}`).checked = false;
+                document.getElementById(`gir-${i}`).checked = false;
+                document.getElementById(`putts-${i}`).value = 2;
+                document.getElementById(`updown-${i}`).checked = false;
+            }
+            
+            calcularScoreTotal();
+        }
+
+        function actualizarEstadisticas() {
+            const statsDiv = document.getElementById('stats-summary');
+            
+            if (rondas.length === 0) {
+                statsDiv.innerHTML = '<p>No hay rondas registradas aún.</p>';
+                return;
+            }
+
+            const totalRondas = rondas.length;
+            const totalHoyos = totalRondas * 18;
+            
+            let totalFairways = 0;
+            let totalGIR = 0;
+            let totalPutts = 0;
+            let totalUpDown = 0;
+            let totalScore = 0;
+
+            rondas.forEach(ronda => {
+                totalScore += ronda.score;
+                if (ronda.hoyos) {
+                    ronda.hoyos.forEach(hoyo => {
+                        if (hoyo.fairway) totalFairways++;
+                        if (hoyo.gir) totalGIR++;
+                        totalPutts += hoyo.putts || 0;
+                        if (hoyo.updown) totalUpDown++;
+                    });
+                }
+            });
+
+            const promedioScore = (totalScore / totalRondas).toFixed(1);
+            const porcentajeFairways = ((totalFairways / totalHoyos) * 100).toFixed(1);
+            const porcentajeGIR = ((totalGIR / totalHoyos) * 100).toFixed(1);
+            const promedioPutts = (totalPutts / totalHoyos).toFixed(1);
+            const porcentajeUpDown = ((totalUpDown / totalHoyos) * 100).toFixed(1);
+
+            statsDiv.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-value">${promedioScore}</div>
+                    <div class="stat-label">Score Promedio</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${porcentajeFairways}%</div>
+                    <div class="stat-label">Fairways</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${porcentajeGIR}%</div>
+                    <div class="stat-label">GIR</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${promedioPutts}</div>
+                    <div class="stat-label">Putts por Hoyo</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${porcentajeUpDown}%</div>
+                    <div class="stat-label">Up & Down</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${totalRondas}</div>
+                    <div class="stat-label">Rondas Jugadas</div>
+                </div>
+            `;
+        }
+
+        function mostrarHistorial() {
+            const roundsList = document.getElementById('rounds-list');
+            
+            if (rondas.length === 0) {
+                roundsList.innerHTML = '<p>No hay rondas registradas aún.</p>';
+                return;
+            }
+
+            roundsList.innerHTML = '';
+            
+            const rondasOrdenadas = [...rondas].sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+            
+            rondasOrdenadas.forEach(ronda => {
+                const fairways = ronda.hoyos ? ronda.hoyos.filter(h => h.fairway).length : 0;
+                const girs = ronda.hoyos ? ronda.hoyos.filter(h => h.gir).length : 0;
+                const putts = ronda.hoyos ? ronda.hoyos.reduce((sum, h) => sum + (h.putts || 0), 0) : 0;
+                const updowns = ronda.hoyos ? ronda.hoyos.filter(h => h.updown).length : 0;
+
+                const roundItem = document.createElement('div');
+                roundItem.className = 'round-item';
+                roundItem.innerHTML = `
+                    <div class="round-header">
+                        <div>
+                            <strong>${new Date(ronda.fecha).toLocaleDateString('es-ES')}</strong> - ${ronda.campo}
+                            ${ronda.tipo === 'torneo' ? '<span class="tournament-badge">TORNEO</span>' : ''}
+                            ${ronda.nombreTorneo ? `<br><em style="color: #666; font-size: 0.9em;">🏆 ${ronda.nombreTorneo}</em>` : ''}
+                        </div>
+                        <div style="font-size: 1.5em; font-weight: bold; color: #1e3c72;">
+                            ${ronda.score}
+                        </div>
+                    </div>
+                    ${ronda.companeros ? `<div style="margin: 5px 0; color: #666;"><strong>👥 Jugó con:</strong> ${ronda.companeros}</div>` : ''}
+                    <div class="round-stats">
+                        <div><strong>Fairways:</strong> ${fairways}/18 (${((fairways/18)*100).toFixed(1)}%)</div>
+                        <div><strong>GIR:</strong> ${girs}/18 (${((girs/18)*100).toFixed(1)}%)</div>
+                        <div><strong>Putts:</strong> ${putts} (${putts > 0 ? (putts/18).toFixed(1) : '0'} promedio)</div>
+                        <div><strong>Up & Down:</strong> ${updowns}/18 (${((updowns/18)*100).toFixed(1)}%)</div>
+                    </div>
+                    ${ronda.observaciones ? `
+                        <div style="margin-top: 15px; padding: 10px; background: #f0f8ff; border-radius: 8px; border-left: 4px solid #1e3c72;">
+                            <strong>📝 Observaciones:</strong><br>
+                            <em style="color: #333;">${ronda.observaciones}</em>
+                        </div>
+                    ` : ''}
+                    ${ronda.enlace ? `<div style="margin-top: 10px;"><a href="${ronda.enlace}" target="_blank">🔗 Ver resultados completos</a></div>` : ''}
+                    ${ronda.foto ? `<div style="margin-top: 10px;"><img src="${ronda.foto}" style="max-width: 200px; border-radius: 5px; cursor: pointer;" onclick="mostrarFoto('${ronda.foto}')"></div>` : ''}
+                `;
+                roundsList.appendChild(roundItem);
+            });
+        }
+
+        function guardarMetas() {
+            metas = {
+                score: parseFloat(document.getElementById('metaScore').value) || null,
+                fairways: parseFloat(document.getElementById('metaFairways').value) || null,
+                gir: parseFloat(document.getElementById('metaGIR').value) || null,
+                putts: parseFloat(document.getElementById('metaPutts').value) || null,
+                objetivo: document.getElementById('objetivoMes').value || ''
+            };
+            
+            localStorage.setItem('golfMetas', JSON.stringify(metas));
+            alert('¡Metas guardadas exitosamente! 🎯');
+        }
+
+        function cargarMetas() {
+            if (metas.score) document.getElementById('metaScore').value = metas.score;
+            if (metas.fairways) document.getElementById('metaFairways').value = metas.fairways;
+            if (metas.gir) document.getElementById('metaGIR').value = metas.gir;
+            if (metas.putts) document.getElementById('metaPutts').value = metas.putts;
+            if (metas.objetivo) document.getElementById('objetivoMes').value = metas.objetivo;
+        }
+
+        function exportarDatos() {
+            if (rondas.length === 0) {
+                alert('No hay datos para exportar');
+                return;
+            }
+
+            let reporte = `REPORTE DE GOLF - ALONSO\n`;
+            reporte += `Generado: ${new Date().toLocaleDateString('es-ES')}\n`;
+            reporte += `=====================================\n\n`;
+
+            const totalRondas = rondas.length;
+            const totalHoyos = totalRondas * 18;
+            
+            let totalFairways = 0;
+            let totalGIR = 0;
+            let totalPutts = 0;
+            let totalUpDown = 0;
+            let totalScore = 0;
+
+            rondas.forEach(ronda => {
+                totalScore += ronda.score;
+                if (ronda.hoyos) {
+                    ronda.hoyos.forEach(hoyo => {
+                        if (hoyo.fairway) totalFairways++;
+                        if (hoyo.gir) totalGIR++;
+                        totalPutts += hoyo.putts || 0;
+                        if (hoyo.updown) totalUpDown++;
+                    });
+                }
+            });
+
+            const promedioScore = (totalScore / totalRondas).toFixed(1);
+            const porcentajeFairways = ((totalFairways / totalHoyos) * 100).toFixed(1);
+            const porcentajeGIR = ((totalGIR / totalHoyos) * 100).toFixed(1);
+            const promedioPutts = (totalPutts / totalHoyos).toFixed(2);
+            const porcentajeUpDown = ((totalUpDown / totalHoyos) * 100).toFixed(1);
+
+            reporte += `ESTADÍSTICAS GENERALES:\n`;
+            reporte += `- Rondas jugadas: ${totalRondas}\n`;
+            reporte += `- Score promedio: ${promedioScore}\n`;
+            reporte += `- Fairways: ${porcentajeFairways}% (${totalFairways}/${totalHoyos})\n`;
+            reporte += `- GIR: ${porcentajeGIR}% (${totalGIR}/${totalHoyos})\n`;
+            reporte += `- Putts por hoyo: ${promedioPutts}\n`;
+            reporte += `- Up & Down: ${porcentajeUpDown}% (${totalUpDown}/${totalHoyos})\n\n`;
+
+            if (Object.keys(metas).length > 0) {
+                reporte += `METAS ESTABLECIDAS:\n`;
+                if (metas.score) reporte += `- Score objetivo: ${metas.score}\n`;
+                if (metas.fairways) reporte += `- Fairways objetivo: ${metas.fairways}%\n`;
+                if (metas.gir) reporte += `- GIR objetivo: ${metas.gir}%\n`;
+                if (metas.putts) reporte += `- Putts objetivo: ${metas.putts} por hoyo\n`;
+                if (metas.objetivo) reporte += `- Objetivo del mes: ${metas.objetivo}\n`;
+                reporte += `\n`;
+            }
+
+            reporte += `HISTORIAL DE RONDAS:\n`;
+            reporte += `=====================================\n`;
+            
+            const rondasOrdenadas = [...rondas].sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+            
+            rondasOrdenadas.forEach((ronda, index) => {
+                const fairways = ronda.hoyos ? ronda.hoyos.filter(h => h.fairway).length : 0;
+                const girs = ronda.hoyos ? ronda.hoyos.filter(h => h.gir).length : 0;
+                const putts = ronda.hoyos ? ronda.hoyos.reduce((sum, h) => sum + (h.putts || 0), 0) : 0;
+                const updowns = ronda.hoyos ? ronda.hoyos.filter(h => h.updown).length : 0;
+
+                reporte += `${index + 1}. ${new Date(ronda.fecha).toLocaleDateString('es-ES')} - ${ronda.campo}\n`;
+                reporte += `   Tipo: ${ronda.tipo} | Score: ${ronda.score}\n`;
+                if (ronda.nombreTorneo) reporte += `   Torneo: ${ronda.nombreTorneo}\n`;
+                if (ronda.companeros) reporte += `   Compañeros: ${ronda.companeros}\n`;
+                reporte += `   Fairways: ${fairways}/18 (${((fairways/18)*100).toFixed(1)}%)\n`;
+                reporte += `   GIR: ${girs}/18 (${((girs/18)*100).toFixed(1)}%)\n`;
+                reporte += `   Putts: ${putts} (${putts > 0 ? (putts/18).toFixed(1) : '0'} promedio)\n`;
+                reporte += `   Up & Down: ${updowns}/18 (${((updowns/18)*100).toFixed(1)}%)\n`;
+                if (ronda.observaciones) reporte += `   Observaciones: ${ronda.observaciones}\n`;
+                if (ronda.enlace) reporte += `   Resultados: ${ronda.enlace}\n`;
+                reporte += `\n`;
+            });
+
+            const blob = new Blob([reporte], { type: 'text/plain;charset=utf-8' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Reporte_Golf_Alonso_${new Date().toISOString().split('T')[0]}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+
+            alert('📤 Reporte exportado exitosamente! El archivo se ha descargado y está listo para enviar al coach.');
+        }
+
+        function mostrarFoto(src) {
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+                background: rgba(0,0,0,0.8); display: flex; justify-content: center; 
+                align-items: center; z-index: 1000; cursor: pointer;
+            `;
+            modal.innerHTML = `<img src="${src}" style="max-width: 90%; max-height: 90%; border-radius: 10px;">`;
+            modal.onclick = () => document.body.removeChild(modal);
+            document.body.appendChild(modal);
+        }
+    </script>
+</body>
+</html>
