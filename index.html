@@ -119,50 +119,87 @@
             border-color: #2a5298;
         }
 
-        .holes-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 15px;
+        /* Nueva tabla de hoyos */
+        .holes-table-container {
             margin-top: 20px;
-        }
-
-        .hole-card {
-            background: #f8f9fa;
+            overflow-x: auto;
             border-radius: 10px;
-            padding: 15px;
-            border: 2px solid #e0e0e0;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
 
-        .hole-card h4 {
+        .holes-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            font-size: 14px;
+        }
+
+        .holes-table th {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+            padding: 12px 8px;
             text-align: center;
-            margin-bottom: 10px;
-            color: #1e3c72;
+            font-weight: bold;
+            position: sticky;
+            top: 0;
+            z-index: 10;
         }
 
-        .hole-stats {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 8px;
+        .holes-table td {
+            padding: 8px;
+            text-align: center;
+            border: 1px solid #e0e0e0;
+            vertical-align: middle;
         }
 
-        .hole-stat {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+        .holes-table tr:nth-child(even) {
+            background: #f8f9fa;
         }
 
-        .hole-stat label {
-            font-size: 12px;
-            margin-bottom: 5px;
-            color: #666;
+        .holes-table tr:hover {
+            background: #e8f4fd;
         }
 
-        .hole-stat input, .hole-stat select {
-            width: 60px;
-            padding: 5px;
+        .hole-input {
+            width: 50px;
+            padding: 4px;
             text-align: center;
             border: 1px solid #ddd;
-            border-radius: 5px;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .hole-select {
+            width: 60px;
+            padding: 4px;
+            text-align: center;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .direction-select {
+            width: 80px;
+            padding: 4px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 11px;
+            background: white;
+        }
+
+        .direction-select option {
+            font-size: 11px;
+        }
+
+        .row-label {
+            background: linear-gradient(135deg, #28a745, #20c997) !important;
+            color: white;
+            font-weight: bold;
+            text-align: left;
+            padding-left: 15px;
+            position: sticky;
+            left: 0;
+            z-index: 5;
         }
 
         .btn {
@@ -263,6 +300,15 @@
             font-weight: bold;
         }
 
+        .score-total {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            color: white;
+            font-weight: bold;
+            font-size: 16px;
+            padding: 8px;
+            border-radius: 5px;
+        }
+
         @media (max-width: 768px) {
             .tabs {
                 flex-direction: column;
@@ -272,8 +318,21 @@
                 grid-template-columns: 1fr;
             }
             
-            .holes-grid {
-                grid-template-columns: repeat(2, 1fr);
+            .holes-table {
+                font-size: 12px;
+            }
+            
+            .hole-input {
+                width: 40px;
+            }
+            
+            .hole-select {
+                width: 50px;
+            }
+            
+            .direction-select {
+                width: 70px;
+                font-size: 10px;
             }
         }
     </style>
@@ -355,8 +414,11 @@
 
                 <h3>📊 Estadísticas por Hoyo</h3>
                 <p style="color: #666; margin-bottom: 15px;">💡 El score total se calculará automáticamente sumando todos los hoyos</p>
-                <div class="holes-grid" id="holes-grid">
-                    <!-- Los hoyos se generarán dinámicamente -->
+                
+                <div class="holes-table-container">
+                    <table class="holes-table" id="holes-table">
+                        <!-- La tabla se generará dinámicamente -->
+                    </table>
                 </div>
 
                 <div style="text-align: center; margin-top: 30px;">
@@ -592,7 +654,7 @@
             document.getElementById('fecha').value = new Date().toISOString().split('T')[0];
             
             // Inicializar UI inmediatamente
-            generarHoyos();
+            generarTablaHoyos();
             actualizarEstadisticas();
             mostrarHistorial();
             cargarMetas();
@@ -836,65 +898,245 @@
             }
         }
 
-        function generarHoyos() {
-            const holesGrid = document.getElementById('holes-grid');
-            holesGrid.innerHTML = '';
+        function generarTablaHoyos() {
+            const holesTable = document.getElementById('holes-table');
             
+            let tableHTML = `
+                <thead>
+                    <tr>
+                        <th style="width: 120px;">Estadística</th>
+            `;
+            
+            // Generar encabezados de hoyos (1-18)
             for (let i = 1; i <= 18; i++) {
-                const holeCard = document.createElement('div');
-                holeCard.className = 'hole-card';
-                holeCard.innerHTML = `
-                    <h4>Hoyo ${i}</h4>
-                    <div class="hole-stats">
-                        <div class="hole-stat">
-                            <label>Score</label>
-                            <input type="number" id="score-${i}" min="1" max="10" value="4" oninput="calcularScoreTotal()">
-                        </div>
-                        <div class="hole-stat">
-                            <label>Par</label>
-                            <select id="par-${i}">
-                                <option value="3">3</option>
-                                <option value="4" selected>4</option>
-                                <option value="5">5</option>
-                            </select>
-                        </div>
-                        <div class="hole-stat">
-                            <label>Fairway</label>
-                            <input type="checkbox" id="fairway-${i}">
-                        </div>
-                        <div class="hole-stat">
-                            <label>GIR</label>
-                            <input type="checkbox" id="gir-${i}">
-                        </div>
-                        <div class="hole-stat">
-                            <label>Putts</label>
-                            <input type="number" id="putts-${i}" min="1" max="5" value="2">
-                        </div>
-                        <div class="hole-stat">
-                            <label>U&D</label>
-                            <input type="checkbox" id="updown-${i}">
-                        </div>
-                    </div>
-                `;
-                holesGrid.appendChild(holeCard);
+                tableHTML += `<th style="width: 60px;">H${i}</th>`;
             }
+            tableHTML += `<th style="width: 80px;">Total</th></tr></thead><tbody>`;
             
-            console.log('18 hoyos generados');
+            // Fila de Par
+            tableHTML += `<tr><td class="row-label">🏌️ Par</td>`;
+            for (let i = 1; i <= 18; i++) {
+                tableHTML += `
+                    <td>
+                        <select class="hole-select" id="par-${i}" onchange="calcularScoreTotal()">
+                            <option value="3">3</option>
+                            <option value="4" selected>4</option>
+                            <option value="5">5</option>
+                        </select>
+                    </td>
+                `;
+            }
+            tableHTML += `<td id="total-par" class="score-total">72</td></tr>`;
+            
+            // Fila de Score
+            tableHTML += `<tr><td class="row-label">⭐ Score</td>`;
+            for (let i = 1; i <= 18; i++) {
+                tableHTML += `
+                    <td>
+                        <input type="number" class="hole-input" id="score-${i}" min="1" max="10" value="4" oninput="calcularScoreTotal()">
+                    </td>
+                `;
+            }
+            tableHTML += `<td id="total-score" class="score-total">72</td></tr>`;
+            
+            // Fila de Fairways (solo para par 4 y 5)
+            tableHTML += `<tr><td class="row-label">🎯 Fairway</td>`;
+            for (let i = 1; i <= 18; i++) {
+                tableHTML += `
+                    <td>
+                        <select class="direction-select" id="fairway-${i}" onchange="actualizarFairwayStats()">
+                            <option value="">-</option>
+                            <option value="hit">✅ Sí</option>
+                            <option value="left">← Izq</option>
+                            <option value="right">→ Der</option>
+                        </select>
+                    </td>
+                `;
+            }
+            tableHTML += `<td id="total-fairways" class="score-total">0/14</td></tr>`;
+            
+            // Fila de GIR
+            tableHTML += `<tr><td class="row-label">🎯 GIR</td>`;
+            for (let i = 1; i <= 18; i++) {
+                tableHTML += `
+                    <td>
+                        <select class="direction-select" id="gir-${i}" onchange="actualizarGIRStats()">
+                            <option value="">-</option>
+                            <option value="hit">✅ Sí</option>
+                            <option value="short">↓ Corto</option>
+                            <option value="long">↑ Largo</option>
+                            <option value="left">← Izq</option>
+                            <option value="right">→ Der</option>
+                        </select>
+                    </td>
+                `;
+            }
+            tableHTML += `<td id="total-gir" class="score-total">0/18</td></tr>`;
+            
+            // Fila de Putts
+            tableHTML += `<tr><td class="row-label">⛳ Putts</td>`;
+            for (let i = 1; i <= 18; i++) {
+                tableHTML += `
+                    <td>
+                        <input type="number" class="hole-input" id="putts-${i}" min="1" max="5" value="2" oninput="calcularPuttStats()">
+                    </td>
+                `;
+            }
+            tableHTML += `<td id="total-putts" class="score-total">36</td></tr>`;
+            
+            // Fila de Up & Down
+            tableHTML += `<tr><td class="row-label">🆙 Up & Down</td>`;
+            for (let i = 1; i <= 18; i++) {
+                tableHTML += `
+                    <td>
+                        <select class="hole-select" id="updown-${i}" onchange="actualizarUpDownStats()">
+                            <option value="">-</option>
+                            <option value="yes">✅ Sí</option>
+                            <option value="no">❌ No</option>
+                        </select>
+                    </td>
+                `;
+            }
+            tableHTML += `<td id="total-updown" class="score-total">0/18</td></tr>`;
+            
+            tableHTML += `</tbody>`;
+            holesTable.innerHTML = tableHTML;
+            
+            console.log('Tabla de 18 hoyos generada');
             calcularScoreTotal();
         }
 
         function calcularScoreTotal() {
-            let total = 0;
+            let totalScore = 0;
+            let totalPar = 0;
+            
             for (let i = 1; i <= 18; i++) {
                 const scoreInput = document.getElementById(`score-${i}`);
+                const parSelect = document.getElementById(`par-${i}`);
+                
                 if (scoreInput) {
                     const score = parseInt(scoreInput.value) || 0;
-                    total += score;
+                    totalScore += score;
+                }
+                
+                if (parSelect) {
+                    const par = parseInt(parSelect.value) || 0;
+                    totalPar += par;
                 }
             }
+            
             const scoreField = document.getElementById('score');
+            const totalScoreCell = document.getElementById('total-score');
+            const totalParCell = document.getElementById('total-par');
+            
             if (scoreField) {
-                scoreField.value = total > 0 ? total : '';
+                scoreField.value = totalScore > 0 ? totalScore : '';
+            }
+            if (totalScoreCell) {
+                totalScoreCell.textContent = totalScore;
+                // Colorear según el resultado vs par
+                const diferencia = totalScore - totalPar;
+                if (diferencia < 0) {
+                    totalScoreCell.style.background = 'linear-gradient(135deg, #28a745, #20c997)'; // Verde para bajo par
+                } else if (diferencia === 0) {
+                    totalScoreCell.style.background = 'linear-gradient(135deg, #17a2b8, #138496)'; // Azul para par
+                } else {
+                    totalScoreCell.style.background = 'linear-gradient(135deg, #ff6b6b, #ee5a24)'; // Rojo para sobre par
+                }
+            }
+            if (totalParCell) {
+                totalParCell.textContent = totalPar;
+            }
+            
+            // También actualizar estadísticas de fairways y putts
+            actualizarFairwayStats();
+            calcularPuttStats();
+        }
+
+        function actualizarFairwayStats() {
+            let fairwaysAcertados = 0;
+            let fairwaysPosibles = 0;
+            
+            for (let i = 1; i <= 18; i++) {
+                const parSelect = document.getElementById(`par-${i}`);
+                const fairwaySelect = document.getElementById(`fairway-${i}`);
+                
+                if (parSelect && fairwaySelect) {
+                    const par = parseInt(parSelect.value);
+                    // Solo contar fairways en par 4 y par 5
+                    if (par === 4 || par === 5) {
+                        fairwaysPosibles++;
+                        if (fairwaySelect.value === 'hit') {
+                            fairwaysAcertados++;
+                        }
+                    }
+                }
+            }
+            
+            const totalFairwaysCell = document.getElementById('total-fairways');
+            if (totalFairwaysCell) {
+                totalFairwaysCell.textContent = `${fairwaysAcertados}/${fairwaysPosibles}`;
+                const porcentaje = fairwaysPosibles > 0 ? ((fairwaysAcertados / fairwaysPosibles) * 100).toFixed(0) : 0;
+                totalFairwaysCell.title = `${porcentaje}% de fairways acertados`;
+            }
+        }
+
+        function actualizarGIRStats() {
+            let girAcertados = 0;
+            
+            for (let i = 1; i <= 18; i++) {
+                const girSelect = document.getElementById(`gir-${i}`);
+                if (girSelect && girSelect.value === 'hit') {
+                    girAcertados++;
+                }
+            }
+            
+            const totalGIRCell = document.getElementById('total-gir');
+            if (totalGIRCell) {
+                totalGIRCell.textContent = `${girAcertados}/18`;
+                const porcentaje = ((girAcertados / 18) * 100).toFixed(0);
+                totalGIRCell.title = `${porcentaje}% de greens en regulación`;
+            }
+        }
+
+        function calcularPuttStats() {
+            let totalPutts = 0;
+            
+            for (let i = 1; i <= 18; i++) {
+                const puttsInput = document.getElementById(`putts-${i}`);
+                if (puttsInput) {
+                    const putts = parseInt(puttsInput.value) || 0;
+                    totalPutts += putts;
+                }
+            }
+            
+            const totalPuttsCell = document.getElementById('total-putts');
+            if (totalPuttsCell) {
+                totalPuttsCell.textContent = totalPutts;
+                const promedio = (totalPutts / 18).toFixed(1);
+                totalPuttsCell.title = `${promedio} putts promedio por hoyo`;
+            }
+        }
+
+        function actualizarUpDownStats() {
+            let upDownAcertados = 0;
+            let upDownIntentos = 0;
+            
+            for (let i = 1; i <= 18; i++) {
+                const updownSelect = document.getElementById(`updown-${i}`);
+                if (updownSelect && updownSelect.value !== '') {
+                    upDownIntentos++;
+                    if (updownSelect.value === 'yes') {
+                        upDownAcertados++;
+                    }
+                }
+            }
+            
+            const totalUpDownCell = document.getElementById('total-updown');
+            if (totalUpDownCell) {
+                totalUpDownCell.textContent = `${upDownAcertados}/${upDownIntentos}`;
+                const porcentaje = upDownIntentos > 0 ? ((upDownAcertados / upDownIntentos) * 100).toFixed(0) : 0;
+                totalUpDownCell.title = `${porcentaje}% de up & down exitosos`;
             }
         }
 
@@ -937,28 +1179,40 @@
             };
 
             let scoreTotal = 0;
+            let fairwaysPosibles = 0;
+            
             for (let i = 1; i <= 18; i++) {
                 const score = parseInt(document.getElementById(`score-${i}`).value) || 4;
                 const par = parseInt(document.getElementById(`par-${i}`).value) || 4;
-                const fairway = document.getElementById(`fairway-${i}`).checked;
-                const gir = document.getElementById(`gir-${i}`).checked;
+                const fairwayValue = document.getElementById(`fairway-${i}`).value;
+                const girValue = document.getElementById(`gir-${i}`).value;
                 const putts = parseInt(document.getElementById(`putts-${i}`).value) || 2;
-                const updown = document.getElementById(`updown-${i}`).checked;
+                const updownValue = document.getElementById(`updown-${i}`).value;
 
                 scoreTotal += score;
+                
+                // Determinar si este hoyo cuenta para fairways
+                const esFairwayHole = (par === 4 || par === 5);
+                if (esFairwayHole) {
+                    fairwaysPosibles++;
+                }
 
                 ronda.hoyos.push({
                     hoyo: i,
                     score,
                     par,
-                    fairway,
-                    gir,
+                    fairway: fairwayValue === 'hit',
+                    fairwayDirection: fairwayValue && fairwayValue !== 'hit' ? fairwayValue : null,
+                    esFairwayHole, // Nuevo campo para identificar si cuenta para estadísticas
+                    gir: girValue === 'hit',
+                    girDirection: girValue && girValue !== 'hit' ? girValue : null,
                     putts,
-                    updown
+                    updown: updownValue === 'yes'
                 });
             }
 
             ronda.score = scoreTotal;
+            ronda.fairwaysPosibles = fairwaysPosibles; // Guardar cuántos fairways eran posibles
 
             // Guardar foto si existe
             const fotoInput = document.getElementById('foto');
@@ -1010,10 +1264,10 @@
             for (let i = 1; i <= 18; i++) {
                 document.getElementById(`score-${i}`).value = 4;
                 document.getElementById(`par-${i}`).value = 4;
-                document.getElementById(`fairway-${i}`).checked = false;
-                document.getElementById(`gir-${i}`).checked = false;
+                document.getElementById(`fairway-${i}`).value = '';
+                document.getElementById(`gir-${i}`).value = '';
                 document.getElementById(`putts-${i}`).value = 2;
-                document.getElementById(`updown-${i}`).checked = false;
+                document.getElementById(`updown-${i}`).value = '';
             }
             
             calcularScoreTotal();
@@ -1030,7 +1284,8 @@
             const totalRondas = rondas.length;
             const totalHoyos = totalRondas * 18;
             
-            let totalFairways = 0;
+            let totalFairwaysAcertados = 0;
+            let totalFairwaysPosibles = 0;
             let totalGIR = 0;
             let totalPutts = 0;
             let totalUpDown = 0;
@@ -1040,7 +1295,11 @@
                 totalScore += ronda.score;
                 if (ronda.hoyos) {
                     ronda.hoyos.forEach(hoyo => {
-                        if (hoyo.fairway) totalFairways++;
+                        // Solo contar fairways en hoyos par 4 y 5
+                        if (hoyo.esFairwayHole || (hoyo.par === 4 || hoyo.par === 5)) {
+                            totalFairwaysPosibles++;
+                            if (hoyo.fairway) totalFairwaysAcertados++;
+                        }
                         if (hoyo.gir) totalGIR++;
                         totalPutts += hoyo.putts || 0;
                         if (hoyo.updown) totalUpDown++;
@@ -1049,7 +1308,124 @@
             });
 
             const promedioScore = (totalScore / totalRondas).toFixed(1);
-            const porcentajeFairways = ((totalFairways / totalHoyos) * 100).toFixed(1);
+            const porcentajeFairways = totalFairwaysPosibles > 0 ? ((totalFairwaysAcertados / totalFairwaysPosibles) * 100).toFixed(1) : 0;
+            const porcentajeGIR = ((totalGIR / totalHoyos) * 100).toFixed(1);
+            const promedioPutts = (totalPutts / totalHoyos).toFixed(2);
+            const porcentajeUpDown = ((totalUpDown / totalHoyos) * 100).toFixed(1);
+
+            reporte += `ESTADÍSTICAS GENERALES:\n`;
+            reporte += `- Rondas jugadas: ${totalRondas}\n`;
+            reporte += `- Score promedio: ${promedioScore}\n`;
+            reporte += `- Fairways: ${porcentajeFairways}% (${totalFairwaysAcertados}/${totalFairwaysPosibles}) *Solo par 4 y 5\n`;
+            reporte += `- GIR: ${porcentajeGIR}% (${totalGIR}/${totalHoyos})\n`;
+            reporte += `- Putts por hoyo: ${promedioPutts}\n`;
+            reporte += `- Up & Down: ${porcentajeUpDown}% (${totalUpDown}/${totalHoyos})\n\n`;
+
+            // Análisis de tendencias direccionales
+            let fairwayFallas = { left: 0, right: 0 };
+            let girFallas = { short: 0, long: 0, left: 0, right: 0 };
+            
+            rondas.forEach(ronda => {
+                if (ronda.hoyos) {
+                    ronda.hoyos.forEach(hoyo => {
+                        if (hoyo.fairwayDirection) {
+                            fairwayFallas[hoyo.fairwayDirection] = (fairwayFallas[hoyo.fairwayDirection] || 0) + 1;
+                        }
+                        if (hoyo.girDirection) {
+                            girFallas[hoyo.girDirection] = (girFallas[hoyo.girDirection] || 0) + 1;
+                        }
+                    });
+                }
+            });
+
+            reporte += `ANÁLISIS DE TENDENCIAS:\n`;
+            reporte += `Fairways fallados:\n`;
+            reporte += `- Izquierda: ${fairwayFallas.left || 0} veces\n`;
+            reporte += `- Derecha: ${fairwayFallas.right || 0} veces\n`;
+            reporte += `\nGIR fallados:\n`;
+            reporte += `- Corto: ${girFallas.short || 0} veces\n`;
+            reporte += `- Largo: ${girFallas.long || 0} veces\n`;
+            reporte += `- Izquierda: ${girFallas.left || 0} veces\n`;
+            reporte += `- Derecha: ${girFallas.right || 0} veces\n\n`;
+
+            if (Object.keys(metas).length > 0) {
+                reporte += `METAS ESTABLECIDAS:\n`;
+                if (metas.score) reporte += `- Score objetivo: ${metas.score}\n`;
+                if (metas.fairways) reporte += `- Fairways objetivo: ${metas.fairways}%\n`;
+                if (metas.gir) reporte += `- GIR objetivo: ${metas.gir}%\n`;
+                if (metas.putts) reporte += `- Putts objetivo: ${metas.putts} por hoyo\n`;
+                if (metas.objetivo) reporte += `- Objetivo del mes: ${metas.objetivo}\n`;
+                reporte += `\n`;
+            }
+
+            reporte += `HISTORIAL DE RONDAS:\n`;
+            reporte += `=====================================\n`;
+            
+            const rondasOrdenadas = [...rondas].sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+            
+            rondasOrdenadas.forEach((ronda, index) => {
+                let fairwaysAcertados = 0;
+                let fairwaysPosibles = 0;
+                let girs = 0;
+                let putts = 0;
+                let updowns = 0;
+                
+                if (ronda.hoyos) {
+                    ronda.hoyos.forEach(h => {
+                        if (h.esFairwayHole || (h.par === 4 || h.par === 5)) {
+                            fairwaysPosibles++;
+                            if (h.fairway) fairwaysAcertados++;
+                        }
+                        if (h.gir) girs++;
+                        putts += h.putts || 0;
+                        if (h.updown) updowns++;
+                    });
+                }
+
+                reporte += `${index + 1}. ${new Date(ronda.fecha).toLocaleDateString('es-ES')} - ${ronda.campo}\n`;
+                reporte += `   Tipo: ${ronda.tipo} | Score: ${ronda.score}\n`;
+                if (ronda.nombreTorneo) reporte += `   Torneo: ${ronda.nombreTorneo}\n`;
+                if (ronda.companeros) reporte += `   Compañeros: ${ronda.companeros}\n`;
+                reporte += `   Fairways: ${fairwaysAcertados}/${fairwaysPosibles} (${fairwaysPosibles > 0 ? ((fairwaysAcertados/fairwaysPosibles)*100).toFixed(1) : 0}%)\n`;
+                reporte += `   GIR: ${girs}/18 (${((girs/18)*100).toFixed(1)}%)\n`;
+                reporte += `   Putts: ${putts} (${putts > 0 ? (putts/18).toFixed(1) : '0'} promedio)\n`;
+                reporte += `   Up & Down: ${updowns}/18 (${((updowns/18)*100).toFixed(1)}%)\n`;
+                if (ronda.observaciones) reporte += `   Observaciones: ${ronda.observaciones}\n`;
+                if (ronda.enlace) reporte += `   Resultados: ${ronda.enlace}\n`;
+                reporte += `\n`;
+            });
+
+            reporte += `\nNOTA: Para ver gráficos y análisis detallados, acceder al dashboard en línea.\n`;
+            reporte += `Los datos se sincronizan automáticamente entre todos los dispositivos.\n`;
+            reporte += `Los fairways solo se cuentan en hoyos par 4 y par 5 (máximo 14 por ronda en campo estándar).\n`;
+
+            const blob = new Blob([reporte], { type: 'text/plain;charset=utf-8' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Reporte_Golf_Alonso_${new Date().toISOString().split('T')[0]}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+
+            alert('📤 Reporte exportado! El archivo incluye análisis de tendencias direccionales y la URL del dashboard para que el coach pueda acceder en línea.');
+        }
+
+        function mostrarFoto(src) {
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+                background: rgba(0,0,0,0.8); display: flex; justify-content: center; 
+                align-items: center; z-index: 1000; cursor: pointer;
+            `;
+            modal.innerHTML = `<img src="${src}" style="max-width: 90%; max-height: 90%; border-radius: 10px;">`;
+            modal.onclick = () => document.body.removeChild(modal);
+            document.body.appendChild(modal);
+        }
+    </script>
+</body>
+</html>certados / totalFairwaysPosibles) * 100).toFixed(1) : 0;
             const porcentajeGIR = ((totalGIR / totalHoyos) * 100).toFixed(1);
             const promedioPutts = (totalPutts / totalHoyos).toFixed(1);
             const porcentajeUpDown = ((totalUpDown / totalHoyos) * 100).toFixed(1);
@@ -1061,7 +1437,7 @@
                 </div>
                 <div class="stat-card">
                     <div class="stat-value">${porcentajeFairways}%</div>
-                    <div class="stat-label">Fairways</div>
+                    <div class="stat-label">Fairways (${totalFairwaysAcertados}/${totalFairwaysPosibles})</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-value">${porcentajeGIR}%</div>
@@ -1095,10 +1471,24 @@
             const rondasOrdenadas = [...rondas].sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
             
             rondasOrdenadas.forEach(ronda => {
-                const fairways = ronda.hoyos ? ronda.hoyos.filter(h => h.fairway).length : 0;
-                const girs = ronda.hoyos ? ronda.hoyos.filter(h => h.gir).length : 0;
-                const putts = ronda.hoyos ? ronda.hoyos.reduce((sum, h) => sum + (h.putts || 0), 0) : 0;
-                const updowns = ronda.hoyos ? ronda.hoyos.filter(h => h.updown).length : 0;
+                let fairwaysAcertados = 0;
+                let fairwaysPosibles = 0;
+                let girs = 0;
+                let putts = 0;
+                let updowns = 0;
+                
+                if (ronda.hoyos) {
+                    ronda.hoyos.forEach(h => {
+                        // Contar fairways solo en par 4 y 5
+                        if (h.esFairwayHole || (h.par === 4 || h.par === 5)) {
+                            fairwaysPosibles++;
+                            if (h.fairway) fairwaysAcertados++;
+                        }
+                        if (h.gir) girs++;
+                        putts += h.putts || 0;
+                        if (h.updown) updowns++;
+                    });
+                }
 
                 const roundItem = document.createElement('div');
                 roundItem.className = 'round-item';
@@ -1115,7 +1505,7 @@
                     </div>
                     ${ronda.companeros ? `<div style="margin: 5px 0; color: #666;"><strong>👥 Jugó con:</strong> ${ronda.companeros}</div>` : ''}
                     <div class="round-stats">
-                        <div><strong>Fairways:</strong> ${fairways}/18 (${((fairways/18)*100).toFixed(1)}%)</div>
+                        <div><strong>Fairways:</strong> ${fairwaysAcertados}/${fairwaysPosibles} (${fairwaysPosibles > 0 ? ((fairwaysAcertados/fairwaysPosibles)*100).toFixed(1) : 0}%)</div>
                         <div><strong>GIR:</strong> ${girs}/18 (${((girs/18)*100).toFixed(1)}%)</div>
                         <div><strong>Putts:</strong> ${putts} (${putts > 0 ? (putts/18).toFixed(1) : '0'} promedio)</div>
                         <div><strong>Up & Down:</strong> ${updowns}/18 (${((updowns/18)*100).toFixed(1)}%)</div>
@@ -1180,7 +1570,8 @@
             const totalRondas = rondas.length;
             const totalHoyos = totalRondas * 18;
             
-            let totalFairways = 0;
+            let totalFairwaysAcertados = 0;
+            let totalFairwaysPosibles = 0;
             let totalGIR = 0;
             let totalPutts = 0;
             let totalUpDown = 0;
@@ -1190,7 +1581,11 @@
                 totalScore += ronda.score;
                 if (ronda.hoyos) {
                     ronda.hoyos.forEach(hoyo => {
-                        if (hoyo.fairway) totalFairways++;
+                        // Solo contar fairways en par 4 y 5
+                        if (hoyo.esFairwayHole || (hoyo.par === 4 || hoyo.par === 5)) {
+                            totalFairwaysPosibles++;
+                            if (hoyo.fairway) totalFairwaysAcertados++;
+                        }
                         if (hoyo.gir) totalGIR++;
                         totalPutts += hoyo.putts || 0;
                         if (hoyo.updown) totalUpDown++;
@@ -1199,80 +1594,4 @@
             });
 
             const promedioScore = (totalScore / totalRondas).toFixed(1);
-            const porcentajeFairways = ((totalFairways / totalHoyos) * 100).toFixed(1);
-            const porcentajeGIR = ((totalGIR / totalHoyos) * 100).toFixed(1);
-            const promedioPutts = (totalPutts / totalHoyos).toFixed(2);
-            const porcentajeUpDown = ((totalUpDown / totalHoyos) * 100).toFixed(1);
-
-            reporte += `ESTADÍSTICAS GENERALES:\n`;
-            reporte += `- Rondas jugadas: ${totalRondas}\n`;
-            reporte += `- Score promedio: ${promedioScore}\n`;
-            reporte += `- Fairways: ${porcentajeFairways}% (${totalFairways}/${totalHoyos})\n`;
-            reporte += `- GIR: ${porcentajeGIR}% (${totalGIR}/${totalHoyos})\n`;
-            reporte += `- Putts por hoyo: ${promedioPutts}\n`;
-            reporte += `- Up & Down: ${porcentajeUpDown}% (${totalUpDown}/${totalHoyos})\n\n`;
-
-            if (Object.keys(metas).length > 0) {
-                reporte += `METAS ESTABLECIDAS:\n`;
-                if (metas.score) reporte += `- Score objetivo: ${metas.score}\n`;
-                if (metas.fairways) reporte += `- Fairways objetivo: ${metas.fairways}%\n`;
-                if (metas.gir) reporte += `- GIR objetivo: ${metas.gir}%\n`;
-                if (metas.putts) reporte += `- Putts objetivo: ${metas.putts} por hoyo\n`;
-                if (metas.objetivo) reporte += `- Objetivo del mes: ${metas.objetivo}\n`;
-                reporte += `\n`;
-            }
-
-            reporte += `HISTORIAL DE RONDAS:\n`;
-            reporte += `=====================================\n`;
-            
-            const rondasOrdenadas = [...rondas].sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
-            
-            rondasOrdenadas.forEach((ronda, index) => {
-                const fairways = ronda.hoyos ? ronda.hoyos.filter(h => h.fairway).length : 0;
-                const girs = ronda.hoyos ? ronda.hoyos.filter(h => h.gir).length : 0;
-                const putts = ronda.hoyos ? ronda.hoyos.reduce((sum, h) => sum + (h.putts || 0), 0) : 0;
-                const updowns = ronda.hoyos ? ronda.hoyos.filter(h => h.updown).length : 0;
-
-                reporte += `${index + 1}. ${new Date(ronda.fecha).toLocaleDateString('es-ES')} - ${ronda.campo}\n`;
-                reporte += `   Tipo: ${ronda.tipo} | Score: ${ronda.score}\n`;
-                if (ronda.nombreTorneo) reporte += `   Torneo: ${ronda.nombreTorneo}\n`;
-                if (ronda.companeros) reporte += `   Compañeros: ${ronda.companeros}\n`;
-                reporte += `   Fairways: ${fairways}/18 (${((fairways/18)*100).toFixed(1)}%)\n`;
-                reporte += `   GIR: ${girs}/18 (${((girs/18)*100).toFixed(1)}%)\n`;
-                reporte += `   Putts: ${putts} (${putts > 0 ? (putts/18).toFixed(1) : '0'} promedio)\n`;
-                reporte += `   Up & Down: ${updowns}/18 (${((updowns/18)*100).toFixed(1)}%)\n`;
-                if (ronda.observaciones) reporte += `   Observaciones: ${ronda.observaciones}\n`;
-                if (ronda.enlace) reporte += `   Resultados: ${ronda.enlace}\n`;
-                reporte += `\n`;
-            });
-
-            reporte += `\nNOTA: Para ver gráficos y análisis detallados, acceder al dashboard en línea.\n`;
-            reporte += `Los datos se sincronizan automáticamente entre todos los dispositivos.\n`;
-
-            const blob = new Blob([reporte], { type: 'text/plain;charset=utf-8' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `Reporte_Golf_Alonso_${new Date().toISOString().split('T')[0]}.txt`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            window.URL.revokeObjectURL(url);
-
-            alert('📤 Reporte exportado! El archivo incluye la URL del dashboard para que el coach pueda acceder en línea.');
-        }
-
-        function mostrarFoto(src) {
-            const modal = document.createElement('div');
-            modal.style.cssText = `
-                position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-                background: rgba(0,0,0,0.8); display: flex; justify-content: center; 
-                align-items: center; z-index: 1000; cursor: pointer;
-            `;
-            modal.innerHTML = `<img src="${src}" style="max-width: 90%; max-height: 90%; border-radius: 10px;">`;
-            modal.onclick = () => document.body.removeChild(modal);
-            document.body.appendChild(modal);
-        }
-    </script>
-</body>
-</html>
+            const porcentajeFairways = totalFairwaysPosibles > 0 ? ((totalFairwaysA
