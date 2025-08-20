@@ -119,6 +119,7 @@
             border-color: #2a5298;
         }
 
+        /* Nueva tabla de hoyos */
         .holes-table-container {
             margin-top: 20px;
             overflow-x: auto;
@@ -184,6 +185,10 @@
             border-radius: 4px;
             font-size: 11px;
             background: white;
+        }
+
+        .direction-select option {
+            font-size: 11px;
         }
 
         .row-label {
@@ -304,88 +309,6 @@
             border-radius: 5px;
         }
 
-        .mood-selector {
-            display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
-            justify-content: center;
-            margin: 10px 0;
-        }
-
-        .mood-option {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 15px;
-            border: 3px solid #e0e0e0;
-            border-radius: 15px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            min-width: 80px;
-            background: white;
-        }
-
-        .mood-option:hover {
-            border-color: #2a5298;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(42, 82, 152, 0.2);
-        }
-
-        .mood-option.selected {
-            border-color: #1e3c72;
-            background: linear-gradient(135deg, #1e3c72, #2a5298);
-            color: white;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(30, 60, 114, 0.3);
-        }
-
-        .mood-emoji {
-            font-size: 2.5em;
-            margin-bottom: 8px;
-        }
-
-        .mood-label {
-            font-size: 0.9em;
-            font-weight: bold;
-            text-align: center;
-        }
-
-        .mood-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            background: linear-gradient(135deg, #6c5ce7, #a29bfe);
-            color: white;
-            padding: 5px 10px;
-            border-radius: 15px;
-            font-size: 12px;
-            font-weight: bold;
-        }
-
-        .mood-stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 15px;
-            margin-top: 20px;
-        }
-
-        .mood-stat-card {
-            background: linear-gradient(135deg, #6c5ce7, #a29bfe);
-            color: white;
-            padding: 15px;
-            border-radius: 10px;
-            text-align: center;
-            font-size: 0.9em;
-        }
-
-        .mood-analysis {
-            background: #f8f9fa;
-            border-radius: 10px;
-            padding: 20px;
-            margin-top: 20px;
-            border-left: 5px solid #6c5ce7;
-        }
-
         @media (max-width: 768px) {
             .tabs {
                 flex-direction: column;
@@ -411,23 +334,6 @@
                 width: 70px;
                 font-size: 10px;
             }
-
-            .mood-selector {
-                gap: 10px;
-            }
-            
-            .mood-option {
-                min-width: 60px;
-                padding: 10px;
-            }
-            
-            .mood-emoji {
-                font-size: 2em;
-            }
-            
-            .mood-label {
-                font-size: 0.8em;
-            }
         }
     </style>
 </head>
@@ -436,6 +342,9 @@
         <div class="header">
             <h1>🏌️‍♂️ Golf Stats Pro</h1>
             <p>Dashboard de Estadísticas de Golf - Alonso</p>
+            <div id="connection-status" style="margin-top: 10px; padding: 5px; border-radius: 5px; font-size: 14px;">
+                🔄 Conectando...
+            </div>
         </div>
 
         <div class="tabs">
@@ -445,7 +354,6 @@
             <div class="tab" onclick="switchTab('historial', this)">Historial</div>
         </div>
 
-        <!-- Nueva Ronda -->
         <div id="nueva-ronda" class="content active">
             <div class="card">
                 <h2>🆕 Registrar Nueva Ronda</h2>
@@ -488,35 +396,18 @@
                 </div>
 
                 <div class="form-group">
-                    <label>😊 ¿Cómo te sentiste durante la ronda?</label>
-                    <div class="mood-selector">
-                        <div class="mood-option" data-mood="muy-feliz" onclick="selectMood('muy-feliz', this)">
-                            <div class="mood-emoji">😄</div>
-                            <div class="mood-label">Muy Feliz</div>
-                        </div>
-                        <div class="mood-option" data-mood="feliz" onclick="selectMood('feliz', this)">
-                            <div class="mood-emoji">😊</div>
-                            <div class="mood-label">Feliz</div>
-                        </div>
-                        <div class="mood-option" data-mood="neutral" onclick="selectMood('neutral', this)">
-                            <div class="mood-emoji">😐</div>
-                            <div class="mood-label">Neutral</div>
-                        </div>
-                        <div class="mood-option" data-mood="frustrado" onclick="selectMood('frustrado', this)">
-                            <div class="mood-emoji">😤</div>
-                            <div class="mood-label">Frustrado</div>
-                        </div>
-                        <div class="mood-option" data-mood="enojado" onclick="selectMood('enojado', this)">
-                            <div class="mood-emoji">😠</div>
-                            <div class="mood-label">Enojado</div>
-                        </div>
-                    </div>
-                    <input type="hidden" id="estadoAnimo" value="">
+                    <label>😊 Estado de Ánimo</label>
+                    <select id="estadoAnimo" style="font-size: 1.2em; padding: 10px;">
+                        <option value="😄">😄 Excelente</option>
+                        <option value="🙂" selected>🙂 Bueno</option>
+                        <option value="😐">😐 Normal</option>
+                        <option value="😟">😟 Mal</option>
+                        <option value="😠">😠 Muy Mal</option>
+                    </select>
                 </div>
-
                 <div class="form-group">
                     <label>📝 Observaciones y Notas</label>
-                    <textarea id="observaciones" rows="4" placeholder="¿En qué fallaste? ¿Qué aprendiste? ¿Condiciones del clima? ¿Aspectos a mejorar?"></textarea>
+                    <textarea id="observaciones" rows="4" placeholder="¿Cómo te sentiste? ¿En qué fallaste? ¿Qué aprendiste? ¿Condiciones del clima? ¿Aspectos a mejorar?"></textarea>
                 </div>
 
                 <div class="form-group">
@@ -533,8 +424,7 @@
                 
                 <div class="holes-table-container">
                     <table class="holes-table" id="holes-table">
-                        <!-- La tabla se generará dinámicamente -->
-                    </table>
+                        </table>
                 </div>
 
                 <div style="text-align: center; margin-top: 30px;">
@@ -543,13 +433,13 @@
             </div>
         </div>
 
-        <!-- Estadísticas -->
         <div id="estadisticas" class="content">
             <div class="card">
                 <h2>📈 Estadísticas Generales</h2>
                 <div class="stats-summary" id="stats-summary">
-                    <!-- Las estadísticas se generarán dinámicamente -->
-                </div>
+                    </div>
+                
+                <div id="mood-stats-container"></div>
                 
                 <div style="text-align: center; margin-top: 20px;">
                     <button class="btn" onclick="exportarDatos()">📤 Exportar Datos para Coach</button>
@@ -557,7 +447,6 @@
             </div>
         </div>
 
-        <!-- Metas -->
         <div id="metas" class="content">
             <div class="card">
                 <h2>🎯 Metas y Objetivos</h2>
@@ -588,142 +477,216 @@
                 <div style="text-align: center; margin: 20px 0;">
                     <button class="btn" onclick="guardarMetas()">💾 Guardar Metas</button>
                 </div>
+                
+                <div id="progreso-metas">
+                    </div>
             </div>
         </div>
 
-        <!-- Historial -->
         <div id="historial" class="content">
             <div class="card">
                 <h2>📋 Historial de Rondas</h2>
                 <div class="rounds-list" id="rounds-list">
-                    <!-- El historial se generará dinámicamente -->
-                </div>
+                    </div>
             </div>
         </div>
     </div>
+
+    <script type="module">
+        // Import Firebase modules
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getFirestore, doc, getDoc, setDoc, updateDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDtVZRkftMlzuqy_iNrN72rwb1bmLQe3ds",
+            authDomain: "golf-stats-alonso-79c2c.firebaseapp.com",
+            projectId: "golf-stats-alonso-79c2c",
+            storageBucket: "golf-stats-alonso-79c2c.firebasestorage.app",
+            messagingSenderId: "660259821284",
+            appId: "1:660259821284:web:559ce2cc1cc2202daa3ef1"
+        };
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        // Make Firebase globally available
+        window.firebase = { db, doc, getDoc, setDoc, updateDoc };
+        window.firebaseReady = true;
+        
+        console.log('Firebase initialized successfully');
+        updateConnectionStatus('🌐 Conectado a la nube', 'success');
+        // Initialize app after Firebase is ready
+        if (window.initializeApp) {
+            window.initializeApp();
+        }
+    </script>
 
     <script>
         // Variables globales
         let rondas = [];
         let metas = {};
+        const userId = 'alonso';
+        let firebaseReady = false;
+        // Function to update connection status
+        function updateConnectionStatus(message, type) {
+            const statusDiv = document.getElementById('connection-status');
+            if (statusDiv) {
+                statusDiv.textContent = message;
+                statusDiv.style.background = type === 'success' ? '#d4edda' : 
+                                           type === 'error' ? '#f8d7da' : '#d1ecf1';
+                statusDiv.style.color = type === 'success' ? '#155724' : 
+                                       type === 'error' ? '#721c24' : '#0c5460';
+            }
+        }
 
-        // Inicializar cuando la página carga
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('Página cargada, inicializando...');
-            
-            // Cargar datos del localStorage
+        // Initialize app function
+        window.initializeApp = function() {
+            console.log('Iniciando Golf Stats Pro...');
+            // Load data from localStorage first
             rondas = JSON.parse(localStorage.getItem('golfRondas')) || [];
             metas = JSON.parse(localStorage.getItem('golfMetas')) || {};
             
-            // Establecer fecha actual
+            // Set current date
             document.getElementById('fecha').value = new Date().toISOString().split('T')[0];
-            
-            // Inicializar UI
-            console.log('Generando tabla de hoyos...');
+            // Initialize UI
             generarTablaHoyos();
             actualizarEstadisticas();
             mostrarHistorial();
             cargarMetas();
             
-            console.log('Inicialización completa');
-        });
+            console.log('Dashboard listo!');
+            // Sync with Firebase if available
+            if (window.firebaseReady) {
+                syncWithFirebase();
+            }
+        };
 
-        function selectMood(mood, element) {
-            document.querySelectorAll('.mood-option').forEach(option => {
-                option.classList.remove('selected');
-            });
-            element.classList.add('selected');
-            document.getElementById('estadoAnimo').value = mood;
-        }
-
-        function getMoodEmoji(mood) {
-            const moods = {
-                'muy-feliz': '😄',
-                'feliz': '😊',
-                'neutral': '😐',
-                'frustrado': '😤',
-                'enojado': '😠'
-            };
-            return moods[mood] || '😐';
-        }
-
-        function getMoodLabel(mood) {
-            const labels = {
-                'muy-feliz': 'Muy Feliz',
-                'feliz': 'Feliz',
-                'neutral': 'Neutral',
-                'frustrado': 'Frustrado',
-                'enojado': 'Enojado'
-            };
-            return labels[mood] || 'Neutral';
-        }
-
-        function analizarEstadoAnimo() {
-            const rondasConMood = rondas.filter(r => r.estadoAnimo);
-            const distribution = {};
-            
-            rondasConMood.forEach(ronda => {
-                if (!distribution[ronda.estadoAnimo]) {
-                    distribution[ronda.estadoAnimo] = {
-                        count: 0,
-                        totalScore: 0,
-                        emoji: getMoodEmoji(ronda.estadoAnimo),
-                        label: getMoodLabel(ronda.estadoAnimo)
-                    };
-                }
-                distribution[ronda.estadoAnimo].count++;
-                distribution[ronda.estadoAnimo].totalScore += ronda.score;
-            });
-
-            Object.keys(distribution).forEach(mood => {
-                distribution[mood].avgScore = (distribution[mood].totalScore / distribution[mood].count).toFixed(1);
-            });
-
-            const insights = [];
-            const moodEntries = Object.entries(distribution);
-            
-            if (moodEntries.length > 0) {
-                const bestMood = moodEntries.reduce((a, b) => 
-                    parseFloat(a[1].avgScore) < parseFloat(b[1].avgScore) ? a : b
-                );
-                const worstMood = moodEntries.reduce((a, b) => 
-                    parseFloat(a[1].avgScore) > parseFloat(b[1].avgScore) ? a : b
-                );
-
-                if (bestMood[0] !== worstMood[0]) {
-                    insights.push(`🏆 Juegas mejor cuando te sientes ${bestMood[1].label.toLowerCase()} (promedio: ${bestMood[1].avgScore})`);
-                    insights.push(`⚠️ Tu peor rendimiento es cuando te sientes ${worstMood[1].label.toLowerCase()} (promedio: ${worstMood[1].avgScore})`);
-                }
-
-                const positiveCount = (distribution['muy-feliz']?.count || 0) + (distribution['feliz']?.count || 0);
-                const negativeCount = (distribution['frustrado']?.count || 0) + (distribution['enojado']?.count || 0);
-
-                if (positiveCount > negativeCount) {
-                    insights.push(`😊 Generalmente mantienes un buen estado de ánimo (${positiveCount} rondas positivas vs ${negativeCount} negativas)`);
-                } else if (negativeCount > positiveCount) {
-                    insights.push(`🤔 Considera trabajar en el manejo emocional (${negativeCount} rondas negativas vs ${positiveCount} positivas)`);
-                }
-
-                if (insights.length === 0) {
-                    insights.push('📊 Sigue registrando tu estado de ánimo para obtener más insights');
-                }
+        // Firebase sync functions
+        async function syncWithFirebase() {
+            if (!window.firebase) {
+                console.log('Firebase not ready');
+                return;
             }
 
-            return { distribution, insights };
+            try {
+                updateConnectionStatus('🔄 Sincronizando...', 'info');
+                const { db, doc, getDoc, setDoc, updateDoc } = window.firebase;
+                const userDocRef = doc(db, 'usuarios', userId);
+                const userDoc = await getDoc(userDocRef);
+
+                if (userDoc.exists()) {
+                    const userData = userDoc.data();
+                    const firebaseRondas = userData.rondas || [];
+                    const firebaseMetas = userData.metas || {};
+                    // Compare data and sync
+                    if (firebaseRondas.length > rondas.length) {
+                        // Download from Firebase
+                        rondas = firebaseRondas;
+                        metas = firebaseMetas;
+                        localStorage.setItem('golfRondas', JSON.stringify(rondas));
+                        localStorage.setItem('golfMetas', JSON.stringify(metas));
+                        
+                        // Update UI
+                        actualizarEstadisticas();
+                        mostrarHistorial();
+                        cargarMetas();
+                        
+                        updateConnectionStatus('📥 Datos actualizados desde la nube', 'success');
+                    } else if (rondas.length > firebaseRondas.length) {
+                        // Upload to Firebase
+                        await updateDoc(userDocRef, {
+                            rondas: rondas,
+                            metas: metas,
+                            lastUpdated: new Date()
+                        });
+                        updateConnectionStatus('📤 Datos subidos a la nube', 'success');
+                    } else {
+                        updateConnectionStatus('✅ Sincronizado con la nube', 'success');
+                    }
+                } else {
+                    // Create new user document
+                    await setDoc(userDocRef, {
+                        nombre: 'Alonso',
+                        createdAt: new Date(),
+                        rondas: rondas,
+                        metas: metas
+                    });
+                    updateConnectionStatus('🆕 Cuenta creada en la nube', 'success');
+                }
+            } catch (error) {
+                console.error('Firebase sync error:', error);
+                updateConnectionStatus('⚠️ Error de sincronización - datos guardados localmente', 'error');
+            }
         }
 
+        async function saveToFirebase() {
+            if (!window.firebase) return;
+            try {
+                const { db, doc, updateDoc } = window.firebase;
+                const userDocRef = doc(db, 'usuarios', userId);
+                
+                await updateDoc(userDocRef, {
+                    rondas: rondas,
+                    metas: metas,
+                    lastUpdated: new Date()
+                });
+                updateConnectionStatus('☁️ Guardado en la nube', 'success');
+            } catch (error) {
+                console.error('Save to Firebase error:', error);
+                updateConnectionStatus('⚠️ Error guardando - datos en local', 'error');
+            }
+        }
+
+        // Initialize when DOM is ready
+        document.addEventListener('DOMContentLoaded', function() {
+            updateConnectionStatus('🔄 Inicializando...', 'info');
+            
+            // If Firebase is already ready, initialize immediately
+            if (window.firebaseReady) {
+                initializeApp();
+            } else {
+                // Otherwise, initialize with local data and wait for Firebase
+                console.log('Iniciando en modo local...');
+                
+                rondas = JSON.parse(localStorage.getItem('golfRondas')) || [];
+                metas = JSON.parse(localStorage.getItem('golfMetas')) || {};
+                
+                document.getElementById('fecha').value = new Date().toISOString().split('T')[0];
+                
+                generarTablaHoyos();
+                actualizarEstadisticas();
+                mostrarHistorial();
+                cargarMetas();
+                
+                updateConnectionStatus('📱 Modo local - esperando conexión', 'info');
+                // Check for Firebase every second for up to 10 seconds
+                let attempts = 0;
+                const checkFirebase = setInterval(() => {
+                    attempts++;
+                    if (window.firebaseReady) {
+                        clearInterval(checkFirebase);
+                        syncWithFirebase();
+                    } else if (attempts >= 10) {
+                        clearInterval(checkFirebase);
+                        updateConnectionStatus('📱 Modo offline - datos guardados localmente', 'error');
+                    }
+                }, 1000);
+            }
+        });
+
         function switchTab(tabName, tabElement) {
+            // Ocultar todos los contenidos
             document.querySelectorAll('.content').forEach(content => {
                 content.classList.remove('active');
             });
-            
+            // Remover clase active de todas las tabs
             document.querySelectorAll('.tab').forEach(tab => {
                 tab.classList.remove('active');
             });
-            
+            // Mostrar contenido seleccionado
             document.getElementById(tabName).classList.add('active');
             tabElement.classList.add('active');
-            
+            // Actualizar datos si es necesario
             if (tabName === 'estadisticas') {
                 actualizarEstadisticas();
             } else if (tabName === 'historial') {
@@ -733,18 +696,16 @@
 
         function generarTablaHoyos() {
             const holesTable = document.getElementById('holes-table');
-            
             let tableHTML = `
                 <thead>
                     <tr>
                         <th style="width: 120px;">Estadística</th>
             `;
-            
+            // Generar encabezados de hoyos (1-18)
             for (let i = 1; i <= 18; i++) {
                 tableHTML += `<th style="width: 60px;">H${i}</th>`;
             }
             tableHTML += `<th style="width: 80px;">Total</th></tr></thead><tbody>`;
-            
             // Fila de Par
             tableHTML += `<tr><td class="row-label">🏌️ Par</td>`;
             for (let i = 1; i <= 18; i++) {
@@ -759,7 +720,6 @@
                 `;
             }
             tableHTML += `<td id="total-par" class="score-total">72</td></tr>`;
-            
             // Fila de Score
             tableHTML += `<tr><td class="row-label">⭐ Score</td>`;
             for (let i = 1; i <= 18; i++) {
@@ -770,7 +730,6 @@
                 `;
             }
             tableHTML += `<td id="total-score" class="score-total">72</td></tr>`;
-            
             // Fila de Fairways
             tableHTML += `<tr><td class="row-label">🎯 Fairway</td>`;
             for (let i = 1; i <= 18; i++) {
@@ -786,7 +745,6 @@
                 `;
             }
             tableHTML += `<td id="total-fairways" class="score-total">0/14</td></tr>`;
-            
             // Fila de GIR
             tableHTML += `<tr><td class="row-label">🎯 GIR</td>`;
             for (let i = 1; i <= 18; i++) {
@@ -804,7 +762,6 @@
                 `;
             }
             tableHTML += `<td id="total-gir" class="score-total">0/18</td></tr>`;
-            
             // Fila de Putts
             tableHTML += `<tr><td class="row-label">⛳ Putts</td>`;
             for (let i = 1; i <= 18; i++) {
@@ -815,7 +772,6 @@
                 `;
             }
             tableHTML += `<td id="total-putts" class="score-total">36</td></tr>`;
-            
             // Fila de Up & Down
             tableHTML += `<tr><td class="row-label">🆙 Up & Down</td>`;
             for (let i = 1; i <= 18; i++) {
@@ -832,3 +788,627 @@
             tableHTML += `<td id="total-updown" class="score-total">0/18</td></tr>`;
             
             tableHTML += `</tbody>`;
+            holesTable.innerHTML = tableHTML;
+            
+            calcularScoreTotal();
+        }
+
+        function calcularScoreTotal() {
+            let totalScore = 0;
+            let totalPar = 0;
+            
+            for (let i = 1; i <= 18; i++) {
+                const scoreInput = document.getElementById(`score-${i}`);
+                const parSelect = document.getElementById(`par-${i}`);
+                
+                if (scoreInput) {
+                    const score = parseInt(scoreInput.value) || 0;
+                    totalScore += score;
+                }
+                
+                if (parSelect) {
+                    const par = parseInt(parSelect.value) || 0;
+                    totalPar += par;
+                }
+            }
+            
+            const scoreField = document.getElementById('score');
+            const totalScoreCell = document.getElementById('total-score');
+            const totalParCell = document.getElementById('total-par');
+            
+            if (scoreField) {
+                scoreField.value = totalScore > 0 ? totalScore : '';
+            }
+            if (totalScoreCell) {
+                totalScoreCell.textContent = totalScore;
+                // Colorear según el resultado vs par
+                const diferencia = totalScore - totalPar;
+                if (diferencia < 0) {
+                    totalScoreCell.style.background = 'linear-gradient(135deg, #28a745, #20c997)';
+                } else if (diferencia === 0) {
+                    totalScoreCell.style.background = 'linear-gradient(135deg, #17a2b8, #138496)';
+                } else {
+                    totalScoreCell.style.background = 'linear-gradient(135deg, #ff6b6b, #ee5a24)';
+                }
+            }
+            if (totalParCell) {
+                totalParCell.textContent = totalPar;
+            }
+            
+            actualizarFairwayStats();
+            calcularPuttStats();
+        }
+
+        function actualizarFairwayStats() {
+            let fairwaysAcertados = 0;
+            let fairwaysPosibles = 0;
+            
+            for (let i = 1; i <= 18; i++) {
+                const parSelect = document.getElementById(`par-${i}`);
+                const fairwaySelect = document.getElementById(`fairway-${i}`);
+                
+                if (parSelect && fairwaySelect) {
+                    const par = parseInt(parSelect.value);
+                    // Solo contar fairways en par 4 y par 5
+                    if (par === 4 || par === 5) {
+                        fairwaysPosibles++;
+                        if (fairwaySelect.value === 'hit') {
+                            fairwaysAcertados++;
+                        }
+                    }
+                }
+            }
+            
+            const totalFairwaysCell = document.getElementById('total-fairways');
+            if (totalFairwaysCell) {
+                totalFairwaysCell.textContent = `${fairwaysAcertados}/${fairwaysPosibles}`;
+                const porcentaje = fairwaysPosibles > 0 ? ((fairwaysAcertados / fairwaysPosibles) * 100).toFixed(0) : 0;
+                totalFairwaysCell.title = `${porcentaje}% de fairways acertados`;
+            }
+        }
+
+        function actualizarGIRStats() {
+            let girAcertados = 0;
+            for (let i = 1; i <= 18; i++) {
+                const girSelect = document.getElementById(`gir-${i}`);
+                if (girSelect && girSelect.value === 'hit') {
+                    girAcertados++;
+                }
+            }
+            
+            const totalGIRCell = document.getElementById('total-gir');
+            if (totalGIRCell) {
+                totalGIRCell.textContent = `${girAcertados}/18`;
+                const porcentaje = ((girAcertados / 18) * 100).toFixed(0);
+                totalGIRCell.title = `${porcentaje}% de greens en regulación`;
+            }
+        }
+
+        function calcularPuttStats() {
+            let totalPutts = 0;
+            for (let i = 1; i <= 18; i++) {
+                const puttsInput = document.getElementById(`putts-${i}`);
+                if (puttsInput) {
+                    const putts = parseInt(puttsInput.value) || 0;
+                    totalPutts += putts;
+                }
+            }
+            
+            const totalPuttsCell = document.getElementById('total-putts');
+            if (totalPuttsCell) {
+                totalPuttsCell.textContent = totalPutts;
+                const promedio = (totalPutts / 18).toFixed(1);
+                totalPuttsCell.title = `${promedio} putts promedio por hoyo`;
+            }
+        }
+
+        function actualizarUpDownStats() {
+            let upDownAcertados = 0;
+            let upDownIntentos = 0;
+            
+            for (let i = 1; i <= 18; i++) {
+                const updownSelect = document.getElementById(`updown-${i}`);
+                if (updownSelect && updownSelect.value !== '') {
+                    upDownIntentos++;
+                    if (updownSelect.value === 'yes') {
+                        upDownAcertados++;
+                    }
+                }
+            }
+            
+            const totalUpDownCell = document.getElementById('total-updown');
+            if (totalUpDownCell) {
+                totalUpDownCell.textContent = `${upDownAcertados}/${upDownIntentos}`;
+                const porcentaje = upDownIntentos > 0 ? ((upDownAcertados / upDownIntentos) * 100).toFixed(0) : 0;
+                totalUpDownCell.title = `${porcentaje}% de up & down exitosos`;
+            }
+        }
+
+        function previewPhoto(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const preview = document.getElementById('photo-preview');
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function guardarRonda() {
+            const fecha = document.getElementById('fecha').value;
+            const campo = document.getElementById('campo').value;
+            const tipo = document.getElementById('tipo').value;
+            const nombreTorneo = document.getElementById('nombreTorneo').value;
+            const companeros = document.getElementById('companeros').value;
+            const enlace = document.getElementById('enlace').value;
+            const observaciones = document.getElementById('observaciones').value;
+            // ---> MODIFICACIÓN: Obtener valor de estado de ánimo
+            const estadoAnimo = document.getElementById('estadoAnimo').value;
+            
+            if (!fecha || !campo) {
+                alert('Por favor completa los campos obligatorios (Fecha y Campo)');
+                return;
+            }
+
+            const ronda = {
+                id: Date.now(),
+                fecha,
+                campo,
+                tipo,
+                nombreTorneo,
+                companeros,
+                enlace,
+                observaciones,
+                // ---> MODIFICACIÓN: Guardar estado de ánimo en el objeto de la ronda
+                mood: estadoAnimo,
+                hoyos: []
+            };
+            let scoreTotal = 0;
+            let fairwaysPosibles = 0;
+            
+            for (let i = 1; i <= 18; i++) {
+                const score = parseInt(document.getElementById(`score-${i}`).value) || 4;
+                const par = parseInt(document.getElementById(`par-${i}`).value) || 4;
+                const fairwayValue = document.getElementById(`fairway-${i}`).value;
+                const girValue = document.getElementById(`gir-${i}`).value;
+                const putts = parseInt(document.getElementById(`putts-${i}`).value) || 2;
+                const updownValue = document.getElementById(`updown-${i}`).value;
+
+                scoreTotal += score;
+                
+                // Determinar si este hoyo cuenta para fairways
+                const esFairwayHole = (par === 4 || par === 5);
+                if (esFairwayHole) {
+                    fairwaysPosibles++;
+                }
+
+                ronda.hoyos.push({
+                    hoyo: i,
+                    score,
+                    par,
+                    fairway: fairwayValue === 'hit',
+                    fairwayDirection: fairwayValue && fairwayValue !== 'hit' ? fairwayValue : null,
+                    esFairwayHole,
+                    gir: girValue === 'hit',
+                    girDirection: girValue && girValue !== 'hit' ? girValue : null,
+                    putts,
+                    updown: updownValue === 'yes'
+                });
+            }
+
+            ronda.score = scoreTotal;
+            ronda.fairwaysPosibles = fairwaysPosibles;
+            // Guardar foto si existe
+            const fotoInput = document.getElementById('foto');
+            if (fotoInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    ronda.foto = e.target.result;
+                    completarGuardado(ronda);
+                };
+                reader.readAsDataURL(fotoInput.files[0]);
+            } else {
+                completarGuardado(ronda);
+            }
+        }
+
+        function completarGuardado(ronda) {
+            rondas.push(ronda);
+            localStorage.setItem('golfRondas', JSON.stringify(rondas));
+            
+            alert('¡Ronda guardada exitosamente! 🎉');
+            limpiarFormulario();
+            actualizarEstadisticas();
+            mostrarHistorial();
+            
+            // Save to Firebase in background
+            saveToFirebase();
+        }
+
+        function limpiarFormulario() {
+            document.getElementById('fecha').value = new Date().toISOString().split('T')[0];
+            document.getElementById('campo').value = '';
+            document.getElementById('nombreTorneo').value = '';
+            document.getElementById('companeros').value = '';
+            document.getElementById('enlace').value = '';
+            document.getElementById('observaciones').value = '';
+            // ---> MODIFICACIÓN: Resetear el selector de ánimo
+            document.getElementById('estadoAnimo').value = '🙂';
+            document.getElementById('foto').value = '';
+            document.getElementById('photo-preview').style.display = 'none';
+            
+            for (let i = 1; i <= 18; i++) {
+                document.getElementById(`score-${i}`).value = 4;
+                document.getElementById(`par-${i}`).value = 4;
+                document.getElementById(`fairway-${i}`).value = '';
+                document.getElementById(`gir-${i}`).value = '';
+                document.getElementById(`putts-${i}`).value = 2;
+                document.getElementById(`updown-${i}`).value = '';
+            }
+            
+            calcularScoreTotal();
+        }
+
+        function actualizarEstadisticas() {
+            const statsDiv = document.getElementById('stats-summary');
+            if (rondas.length === 0) {
+                statsDiv.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">No hay rondas registradas aún. ¡Añade tu primera ronda!</p>';
+                document.getElementById('mood-stats-container').innerHTML = ''; // Limpiar también el de ánimo
+                return;
+            }
+
+            const totalRondas = rondas.length;
+            const totalHoyos = totalRondas * 18;
+            
+            let totalFairwaysAcertados = 0;
+            let totalFairwaysPosibles = 0;
+            let totalGIR = 0;
+            let totalPutts = 0;
+            let totalUpDown = 0;
+            let totalScore = 0;
+            rondas.forEach(ronda => {
+                totalScore += ronda.score;
+                if (ronda.hoyos) {
+                    ronda.hoyos.forEach(hoyo => {
+                        if (hoyo.esFairwayHole || (hoyo.par === 4 || hoyo.par === 5)) {
+                            totalFairwaysPosibles++;
+                            if (hoyo.fairway) totalFairwaysAcertados++;
+                        }
+                        
+                        if (hoyo.gir) totalGIR++;
+                        totalPutts += hoyo.putts || 0;
+                        if (hoyo.updown) totalUpDown++;
+                    });
+                }
+            });
+
+            const promedioScore = (totalScore / totalRondas).toFixed(1);
+            const porcentajeFairways = totalFairwaysPosibles > 0 ? ((totalFairwaysAcertados / totalFairwaysPosibles) * 100).toFixed(1) : 0;
+            const porcentajeGIR = ((totalGIR / totalHoyos) * 100).toFixed(1);
+            const promedioPutts = (totalPutts / totalHoyos).toFixed(1);
+            const porcentajeUpDown = ((totalUpDown / totalHoyos) * 100).toFixed(1);
+            statsDiv.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-value">${promedioScore}</div>
+                    <div class="stat-label">Score Promedio</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${porcentajeFairways}%</div>
+                    <div class="stat-label">Fairways (${totalFairwaysAcertados}/${totalFairwaysPosibles})</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${porcentajeGIR}%</div>
+                    <div class="stat-label">GIR</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${promedioPutts}</div>
+                    <div class="stat-label">Putts por Hoyo</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${porcentajeUpDown}%</div>
+                    <div class="stat-label">Up & Down</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${totalRondas}</div>
+                    <div class="stat-label">Rondas Jugadas</div>
+                </div>
+            `;
+
+            // ---> MODIFICACIÓN: Lógica para calcular y mostrar estadísticas de estado de ánimo
+            const moodContainer = document.getElementById('mood-stats-container');
+            const statsPorAnimo = {};
+            rondas.forEach(ronda => {
+                if (ronda.mood) {
+                    if (!statsPorAnimo[ronda.mood]) {
+                        statsPorAnimo[ronda.mood] = { scores: [], count: 0 };
+                    }
+                    statsPorAnimo[ronda.mood].scores.push(ronda.score);
+                    statsPorAnimo[ronda.mood].count++;
+                }
+            });
+
+            const moodEntries = Object.entries(statsPorAnimo);
+            if (moodEntries.length > 0) {
+                let moodStatsHTML = `
+                    <h3 style="text-align: center; margin-top: 30px; margin-bottom: 20px; color: #1e3c72;">😊 Análisis de Score por Estado de Ánimo</h3>
+                    <div class="stats-summary">
+                `;
+                const moodOrder = ['😄', '🙂', '😐', '😟', '😠'];
+                moodEntries.sort((a, b) => moodOrder.indexOf(a[0]) - moodOrder.indexOf(b[0]));
+
+                moodEntries.forEach(([mood, stats]) => {
+                    const avgScore = (stats.scores.reduce((a, b) => a + b, 0) / stats.count).toFixed(1);
+                    moodStatsHTML += `
+                        <div class="stat-card" style="background: linear-gradient(135deg, #6c757d, #495057);">
+                            <div class="stat-value" style="font-size: 2em;">${mood} ${avgScore}</div>
+                            <div class="stat-label">${stats.count} Rondas</div>
+                        </div>
+                    `;
+                });
+                moodStatsHTML += `</div>`;
+                moodContainer.innerHTML = moodStatsHTML;
+            } else {
+                moodContainer.innerHTML = ''; // Limpiar si no hay datos
+            }
+        }
+
+        function mostrarHistorial() {
+            const roundsList = document.getElementById('rounds-list');
+            if (rondas.length === 0) {
+                roundsList.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">No hay rondas registradas aún. ¡Añade tu primera ronda!</p>';
+                return;
+            }
+
+            roundsList.innerHTML = '';
+            const rondasOrdenadas = [...rondas].sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+            rondasOrdenadas.forEach(ronda => {
+                let fairwaysAcertados = 0;
+                let fairwaysPosibles = 0;
+                let girs = 0;
+                let putts = 0;
+                let updowns = 0;
+                
+                if (ronda.hoyos) {
+                    ronda.hoyos.forEach(h => {
+                        if (h.esFairwayHole || (h.par === 4 || h.par === 5)) {
+                            fairwaysPosibles++;
+                            if (h.fairway) fairwaysAcertados++;
+                        }
+                        if (h.gir) girs++;
+                        putts += h.putts || 0;
+                        if (h.updown) updowns++;
+                    });
+                }
+
+                const roundItem = document.createElement('div');
+                roundItem.className = 'round-item';
+                // ---> MODIFICACIÓN: Añadir emoji de ánimo al lado del score
+                roundItem.innerHTML = `
+                    <div class="round-header">
+                        <div>
+                            <strong>${new Date(ronda.fecha).toLocaleDateString('es-ES')}</strong> - ${ronda.campo}
+                            ${ronda.tipo === 'torneo' ? '<span class="tournament-badge">TORNEO</span>' : ''}
+                            ${ronda.nombreTorneo ? `<br><em style="color: #666; font-size: 0.9em;">🏆 ${ronda.nombreTorneo}</em>` : ''}
+                        </div>
+                        <div style="font-size: 1.5em; font-weight: bold; color: #1e3c72;">
+                            ${ronda.mood || ''} ${ronda.score}
+                        </div>
+                    </div>
+                    ${ronda.companeros ? `<div style="margin: 5px 0; color: #666;"><strong>👥 Jugó con:</strong> ${ronda.companeros}</div>` : ''}
+                    <div class="round-stats">
+                        <div><strong>Fairways:</strong> ${fairwaysAcertados}/${fairwaysPosibles} (${fairwaysPosibles > 0 ? ((fairwaysAcertados/fairwaysPosibles)*100).toFixed(1) : 0}%)</div>
+                        <div><strong>GIR:</strong> ${girs}/18 (${((girs/18)*100).toFixed(1)}%)</div>
+                        <div><strong>Putts:</strong> ${putts} (${putts > 0 ? (putts/18).toFixed(1) : '0'} promedio)</div>
+                        <div><strong>Up & Down:</strong> ${updowns}/18 (${((updowns/18)*100).toFixed(1)}%)</div>
+                    </div>
+                    ${ronda.observaciones ? `
+                        <div style="margin-top: 15px; padding: 10px; background: #f0f8ff; border-radius: 8px; border-left: 4px solid #1e3c72;">
+                            <strong>📝 Observaciones:</strong><br>
+                            <em style="color: #333;">${ronda.observaciones}</em>
+                        </div>
+                    ` : ''}
+                    ${ronda.enlace ? `<div style="margin-top: 10px;"><a href="${ronda.enlace}" target="_blank">🔗 Ver resultados completos</a></div>` : ''}
+                    ${ronda.foto ? `<div style="margin-top: 10px;"><img src="${ronda.foto}" style="max-width: 200px; border-radius: 5px; cursor: pointer;" onclick="mostrarFoto('${ronda.foto}')"></div>` : ''}
+                `;
+                roundsList.appendChild(roundItem);
+            });
+        }
+
+        function guardarMetas() {
+            metas = {
+                score: parseFloat(document.getElementById('metaScore').value) || null,
+                fairways: parseFloat(document.getElementById('metaFairways').value) || null,
+                gir: parseFloat(document.getElementById('metaGIR').value) || null,
+                putts: parseFloat(document.getElementById('metaPutts').value) || null,
+                objetivo: document.getElementById('objetivoMes').value || ''
+            };
+            
+            localStorage.setItem('golfMetas', JSON.stringify(metas));
+            alert('¡Metas guardadas exitosamente! 🎯');
+            // Save to Firebase in background
+            saveToFirebase();
+        }
+
+        function cargarMetas() {
+            if (metas.score) document.getElementById('metaScore').value = metas.score;
+            if (metas.fairways) document.getElementById('metaFairways').value = metas.fairways;
+            if (metas.gir) document.getElementById('metaGIR').value = metas.gir;
+            if (metas.putts) document.getElementById('metaPutts').value = metas.putts;
+            if (metas.objetivo) document.getElementById('objetivoMes').value = metas.objetivo;
+        }
+
+        function exportarDatos() {
+            if (rondas.length === 0) {
+                alert('No hay datos para exportar');
+                return;
+            }
+
+            let reporte = `REPORTE DE GOLF - ALONSO\n`;
+            reporte += `Generado: ${new Date().toLocaleDateString('es-ES')}\n`;
+            reporte += `=====================================\n\n`;
+
+            const totalRondas = rondas.length;
+            const totalHoyos = totalRondas * 18;
+            let totalFairwaysAcertados = 0;
+            let totalFairwaysPosibles = 0;
+            let totalGIR = 0;
+            let totalPutts = 0;
+            let totalUpDown = 0;
+            let totalScore = 0;
+
+            rondas.forEach(ronda => {
+                totalScore += ronda.score;
+                if (ronda.hoyos) {
+                    ronda.hoyos.forEach(hoyo => {
+                        if (hoyo.esFairwayHole || (hoyo.par === 4 || hoyo.par === 5)) {
+                            totalFairwaysPosibles++;
+                            if (hoyo.fairway) totalFairwaysAcertados++;
+                        }
+                        if (hoyo.gir) totalGIR++;
+                        totalPutts += hoyo.putts || 0;
+                        if (hoyo.updown) totalUpDown++;
+                    });
+                }
+            });
+
+            const promedioScore = (totalScore / totalRondas).toFixed(1);
+            const porcentajeFairways = totalFairwaysPosibles > 0 ? ((totalFairwaysAcertados / totalFairwaysPosibles) * 100).toFixed(1) : 0;
+            const porcentajeGIR = ((totalGIR / totalHoyos) * 100).toFixed(1);
+            const promedioPutts = (totalPutts / totalHoyos).toFixed(2);
+            const porcentajeUpDown = ((totalUpDown / totalHoyos) * 100).toFixed(1);
+
+            reporte += `ESTADÍSTICAS GENERALES:\n`;
+            reporte += `- Rondas jugadas: ${totalRondas}\n`;
+            reporte += `- Score promedio: ${promedioScore}\n`;
+            reporte += `- Fairways: ${porcentajeFairways}% (${totalFairwaysAcertados}/${totalFairwaysPosibles}) *Solo par 4 y 5\n`;
+            reporte += `- GIR: ${porcentajeGIR}% (${totalGIR}/${totalHoyos})\n`;
+            reporte += `- Putts por hoyo: ${promedioPutts}\n`;
+            reporte += `- Up & Down: ${porcentajeUpDown}% (${totalUpDown}/${totalHoyos})\n\n`;
+
+            // Análisis de tendencias direccionales
+            let fairwayFallas = { left: 0, right: 0 };
+            let girFallas = { short: 0, long: 0, left: 0, right: 0 };
+            rondas.forEach(ronda => {
+                if (ronda.hoyos) {
+                    ronda.hoyos.forEach(hoyo => {
+                        if (hoyo.fairwayDirection) {
+                            fairwayFallas[hoyo.fairwayDirection] = (fairwayFallas[hoyo.fairwayDirection] || 0) + 1;
+                        }
+                        if (hoyo.girDirection) {
+                            girFallas[hoyo.girDirection] = (girFallas[hoyo.girDirection] || 0) + 1;
+                        }
+                    });
+                }
+            });
+            reporte += `ANÁLISIS DE TENDENCIAS:\n`;
+            reporte += `Fairways fallados:\n`;
+            reporte += `- Izquierda: ${fairwayFallas.left || 0} veces\n`;
+            reporte += `- Derecha: ${fairwayFallas.right || 0} veces\n`;
+            reporte += `\nGIR fallados:\n`;
+            reporte += `- Corto: ${girFallas.short || 0} veces\n`;
+            reporte += `- Largo: ${girFallas.long || 0} veces\n`;
+            reporte += `- Izquierda: ${girFallas.left || 0} veces\n`;
+            reporte += `- Derecha: ${girFallas.right || 0} veces\n\n`;
+
+            // ---> MODIFICACIÓN: Añadir análisis de estado de ánimo al reporte
+            reporte += `ANÁLISIS DE ESTADO DE ÁNIMO:\n`;
+            const statsPorAnimo = {};
+            rondas.forEach(ronda => {
+                if (ronda.mood) {
+                    if (!statsPorAnimo[ronda.mood]) {
+                        statsPorAnimo[ronda.mood] = { scores: [], count: 0 };
+                    }
+                    statsPorAnimo[ronda.mood].scores.push(ronda.score);
+                    statsPorAnimo[ronda.mood].count++;
+                }
+            });
+            const moodEntries = Object.entries(statsPorAnimo);
+            if (moodEntries.length > 0) {
+                 const moodOrder = ['😄', '🙂', '😐', '😟', '😠'];
+                moodEntries.sort((a, b) => moodOrder.indexOf(a[0]) - moodOrder.indexOf(b[0]));
+                moodEntries.forEach(([mood, stats]) => {
+                    const avgScore = (stats.scores.reduce((a, b) => a + b, 0) / stats.count).toFixed(1);
+                    reporte += `- Promedio con ${mood}: ${avgScore} (${stats.count} rondas)\n`;
+                });
+            } else {
+                reporte += `- No hay datos de estado de ánimo registrados.\n`;
+            }
+            reporte += `\n`;
+
+
+            if (Object.keys(metas).length > 0) {
+                reporte += `METAS ESTABLECIDAS:\n`;
+                if (metas.score) reporte += `- Score objetivo: ${metas.score}\n`;
+                if (metas.fairways) reporte += `- Fairways objetivo: ${metas.fairways}%\n`;
+                if (metas.gir) reporte += `- GIR objetivo: ${metas.gir}%\n`;
+                if (metas.putts) reporte += `- Putts objetivo: ${metas.putts} por hoyo\n`;
+                if (metas.objetivo) reporte += `- Objetivo del mes: ${metas.objetivo}\n`;
+                reporte += `\n`;
+            }
+
+            reporte += `HISTORIAL DE RONDAS:\n`;
+            reporte += `=====================================\n`;
+            const rondasOrdenadas = [...rondas].sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+            rondasOrdenadas.forEach((ronda, index) => {
+                let fairwaysAcertados = 0;
+                let fairwaysPosibles = 0;
+                let girs = 0;
+                let putts = 0;
+                let updowns = 0;
+                
+                if (ronda.hoyos) {
+                    ronda.hoyos.forEach(h => {
+                        if (h.esFairwayHole || (h.par === 4 || h.par === 5)) {
+                            fairwaysPosibles++;
+                            if (h.fairway) fairwaysAcertados++;
+                        }
+                        if (h.gir) girs++;
+                        putts += h.putts || 0;
+                        if (h.updown) updowns++;
+                    });
+                }
+
+                reporte += `${index + 1}. ${new Date(ronda.fecha).toLocaleDateString('es-ES')} - ${ronda.campo}\n`;
+                // ---> MODIFICACIÓN: Añadir estado de ánimo en cada ronda del historial
+                reporte += `   Tipo: ${ronda.tipo} | Score: ${ronda.score} | Ánimo: ${ronda.mood || 'N/A'}\n`;
+                if (ronda.nombreTorneo) reporte += `   Torneo: ${ronda.nombreTorneo}\n`;
+                if (ronda.companeros) reporte += `   Compañeros: ${ronda.companeros}\n`;
+                reporte += `   Fairways: ${fairwaysAcertados}/${fairwaysPosibles} (${fairwaysPosibles > 0 ? ((fairwaysAcertados/fairwaysPosibles)*100).toFixed(1) : 0}%)\n`;
+                reporte += `   GIR: ${girs}/18 (${((girs/18)*100).toFixed(1)}%)\n`;
+                reporte += `   Putts: ${putts} (${putts > 0 ? (putts/18).toFixed(1) : '0'} promedio)\n`;
+                reporte += `   Up & Down: ${updowns}/18 (${((updowns/18)*100).toFixed(1)}%)\n`;
+                if (ronda.observaciones) reporte += `   Observaciones: ${ronda.observaciones}\n`;
+                if (ronda.enlace) reporte += `   Resultados: ${ronda.enlace}\n`;
+                reporte += `\n`;
+            });
+            reporte += `\nNOTA: Los fairways solo se cuentan en hoyos par 4 y par 5.\n`;
+            reporte += `Dashboard local - datos guardados en el navegador.\n`;
+
+            const blob = new Blob([reporte], { type: 'text/plain;charset=utf-8' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Reporte_Golf_Alonso_${new Date().toISOString().split('T')[0]}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+            alert('📤 Reporte exportado con análisis de tendencias direccionales!');
+        }
+
+        function mostrarFoto(src) {
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+                background: rgba(0,0,0,0.8); display: flex; justify-content: center; 
+                align-items: center; z-index: 1000; cursor: pointer;
+            `;
+            modal.innerHTML = `<img src="${src}" style="max-width: 90%; max-height: 90%; border-radius: 10px;">`;
+            modal.onclick = () => document.body.removeChild(modal);
+            document.body.appendChild(modal);
+        }
+    </script>
+</body>
+</html>
