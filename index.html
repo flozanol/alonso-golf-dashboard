@@ -392,8 +392,23 @@
                 </div>
 
                 <div class="form-group">
+                    <label>Nombre del Torneo/Evento (opcional)</label>
+                    <input type="text" id="nombreTorneo" placeholder="Ej: Torneo Juvenil Club Campestre">
+                </div>
+
+                <div class="form-group">
+                    <label>Compañeros de Juego (opcional)</label>
+                    <input type="text" id="companeros" placeholder="Ej: Juan Pérez, Carlos López">
+                </div>
+
+                <div class="form-group">
                     <label>Enlace a Resultados (opcional)</label>
                     <input type="url" id="enlace" placeholder="https://resultados-torneo.com">
+                </div>
+
+                <div class="form-group">
+                    <label>📝 Observaciones y Notas</label>
+                    <textarea id="observaciones" rows="4" placeholder="¿Cómo te sentiste? ¿En qué fallaste? ¿Qué aprendiste? ¿Condiciones del clima? ¿Aspectos a mejorar?"></textarea>
                 </div>
 
                 <div class="form-group">
@@ -609,7 +624,10 @@
             const campo = document.getElementById('campo').value;
             const tipo = document.getElementById('tipo').value;
             const score = parseInt(document.getElementById('score').value);
+            const nombreTorneo = document.getElementById('nombreTorneo').value;
+            const companeros = document.getElementById('companeros').value;
             const enlace = document.getElementById('enlace').value;
+            const observaciones = document.getElementById('observaciones').value;
             
             if (!fecha || !campo || !score) {
                 alert('Por favor completa los campos obligatorios');
@@ -622,7 +640,10 @@
                 campo,
                 tipo,
                 score,
+                nombreTorneo,
+                companeros,
                 enlace,
+                observaciones,
                 hoyos: []
             };
 
@@ -667,7 +688,10 @@
         function limpiarFormulario() {
             document.getElementById('campo').value = '';
             document.getElementById('score').value = '';
+            document.getElementById('nombreTorneo').value = '';
+            document.getElementById('companeros').value = '';
             document.getElementById('enlace').value = '';
+            document.getElementById('observaciones').value = '';
             document.getElementById('foto').value = '';
             document.getElementById('photo-preview').style.display = 'none';
             
@@ -765,17 +789,25 @@
                         <div>
                             <strong>${new Date(ronda.fecha).toLocaleDateString('es-ES')}</strong> - ${ronda.campo}
                             ${ronda.tipo === 'torneo' ? '<span class="tournament-badge">TORNEO</span>' : ''}
+                            ${ronda.nombreTorneo ? `<br><em style="color: #666; font-size: 0.9em;">🏆 ${ronda.nombreTorneo}</em>` : ''}
                         </div>
                         <div style="font-size: 1.5em; font-weight: bold; color: #1e3c72;">
                             ${ronda.score}
                         </div>
                     </div>
+                    ${ronda.companeros ? `<div style="margin: 5px 0; color: #666;"><strong>👥 Jugó con:</strong> ${ronda.companeros}</div>` : ''}
                     <div class="round-stats">
                         <div><strong>Fairways:</strong> ${fairways}/18 (${((fairways/18)*100).toFixed(1)}%)</div>
                         <div><strong>GIR:</strong> ${girs}/18 (${((girs/18)*100).toFixed(1)}%)</div>
                         <div><strong>Putts:</strong> ${putts} (${(putts/18).toFixed(1)} promedio)</div>
                         <div><strong>Up & Down:</strong> ${updowns}/18 (${((updowns/18)*100).toFixed(1)}%)</div>
                     </div>
+                    ${ronda.observaciones ? `
+                        <div style="margin-top: 15px; padding: 10px; background: #f0f8ff; border-radius: 8px; border-left: 4px solid #1e3c72;">
+                            <strong>📝 Observaciones:</strong><br>
+                            <em style="color: #333;">${ronda.observaciones}</em>
+                        </div>
+                    ` : ''}
                     ${ronda.enlace ? `<div style="margin-top: 10px;"><a href="${ronda.enlace}" target="_blank">🔗 Ver resultados completos</a></div>` : ''}
                     ${ronda.foto ? `<div style="margin-top: 10px;"><img src="${ronda.foto}" style="max-width: 200px; border-radius: 5px; cursor: pointer;" onclick="mostrarFoto('${ronda.foto}')"></div>` : ''}
                 `;
@@ -1155,10 +1187,13 @@
 
                 reporte += `${index + 1}. ${new Date(ronda.fecha).toLocaleDateString('es-ES')} - ${ronda.campo}\n`;
                 reporte += `   Tipo: ${ronda.tipo} | Score: ${ronda.score}\n`;
+                if (ronda.nombreTorneo) reporte += `   Torneo: ${ronda.nombreTorneo}\n`;
+                if (ronda.companeros) reporte += `   Compañeros: ${ronda.companeros}\n`;
                 reporte += `   Fairways: ${fairways}/18 (${((fairways/18)*100).toFixed(1)}%)\n`;
                 reporte += `   GIR: ${girs}/18 (${((girs/18)*100).toFixed(1)}%)\n`;
                 reporte += `   Putts: ${putts} (${(putts/18).toFixed(1)} promedio)\n`;
                 reporte += `   Up & Down: ${updowns}/18 (${((updowns/18)*100).toFixed(1)}%)\n`;
+                if (ronda.observaciones) reporte += `   Observaciones: ${ronda.observaciones}\n`;
                 if (ronda.enlace) reporte += `   Resultados: ${ronda.enlace}\n`;
                 reporte += `\n`;
             });
