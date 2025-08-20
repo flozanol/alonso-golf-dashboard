@@ -309,6 +309,93 @@
             border-radius: 5px;
         }
 
+        .mood-selector {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin: 10px 0;
+        }
+
+        .mood-option {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 15px;
+            border: 3px solid #e0e0e0;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 80px;
+            background: white;
+        }
+
+        .mood-option:hover {
+            border-color: #2a5298;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(42, 82, 152, 0.2);
+        }
+
+        .mood-option.selected {
+            border-color: #1e3c72;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(30, 60, 114, 0.3);
+        }
+
+        .mood-emoji {
+            font-size: 2.5em;
+            margin-bottom: 8px;
+        }
+
+        .mood-label {
+            font-size: 0.9em;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .mood-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .mood-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .mood-stat-card {
+            background: linear-gradient(135deg, #6c5ce7, #a29bfe);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 0.9em;
+        }
+
+        .mood-stat-emoji {
+            font-size: 1.5em;
+            margin-bottom: 5px;
+        }
+
+        .mood-analysis {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            border-left: 5px solid #6c5ce7;
+        }
+
         @media (max-width: 768px) {
             .tabs {
                 flex-direction: column;
@@ -333,6 +420,23 @@
             .direction-select {
                 width: 70px;
                 font-size: 10px;
+            }
+
+            .mood-selector {
+                gap: 10px;
+            }
+            
+            .mood-option {
+                min-width: 60px;
+                padding: 10px;
+            }
+            
+            .mood-emoji {
+                font-size: 2em;
+            }
+            
+            .mood-label {
+                font-size: 0.8em;
             }
         }
     </style>
@@ -397,8 +501,35 @@
                 </div>
 
                 <div class="form-group">
+                    <label>😊 ¿Cómo te sentiste durante la ronda?</label>
+                    <div class="mood-selector" id="mood-selector">
+                        <div class="mood-option" data-mood="muy-feliz" onclick="selectMood('muy-feliz', this)">
+                            <div class="mood-emoji">😄</div>
+                            <div class="mood-label">Muy Feliz</div>
+                        </div>
+                        <div class="mood-option" data-mood="feliz" onclick="selectMood('feliz', this)">
+                            <div class="mood-emoji">😊</div>
+                            <div class="mood-label">Feliz</div>
+                        </div>
+                        <div class="mood-option" data-mood="neutral" onclick="selectMood('neutral', this)">
+                            <div class="mood-emoji">😐</div>
+                            <div class="mood-label">Neutral</div>
+                        </div>
+                        <div class="mood-option" data-mood="frustrado" onclick="selectMood('frustrado', this)">
+                            <div class="mood-emoji">😤</div>
+                            <div class="mood-label">Frustrado</div>
+                        </div>
+                        <div class="mood-option" data-mood="enojado" onclick="selectMood('enojado', this)">
+                            <div class="mood-emoji">😠</div>
+                            <div class="mood-label">Enojado</div>
+                        </div>
+                    </div>
+                    <input type="hidden" id="estadoAnimo" value="">
+                </div>
+
+                <div class="form-group">
                     <label>📝 Observaciones y Notas</label>
-                    <textarea id="observaciones" rows="4" placeholder="¿Cómo te sentiste? ¿En qué fallaste? ¿Qué aprendiste? ¿Condiciones del clima? ¿Aspectos a mejorar?"></textarea>
+                    <textarea id="observaciones" rows="4" placeholder="¿En qué fallaste? ¿Qué aprendiste? ¿Condiciones del clima? ¿Aspectos a mejorar?"></textarea>
                 </div>
 
                 <div class="form-group">
@@ -683,6 +814,98 @@
             }
         });
 
+        function selectMood(mood, element) {
+            // Remover selección previa
+            document.querySelectorAll('.mood-option').forEach(option => {
+                option.classList.remove('selected');
+            });
+            
+            // Seleccionar nuevo estado de ánimo
+            element.classList.add('selected');
+            document.getElementById('estadoAnimo').value = mood;
+        }
+
+        function getMoodEmoji(mood) {
+            const moods = {
+                'muy-feliz': '😄',
+                'feliz': '😊',
+                'neutral': '😐',
+                'frustrado': '😤',
+                'enojado': '😠'
+            };
+            return moods[mood] || '😐';
+        }
+
+        function getMoodLabel(mood) {
+            const labels = {
+                'muy-feliz': 'Muy Feliz',
+                'feliz': 'Feliz',
+                'neutral': 'Neutral',
+                'frustrado': 'Frustrado',
+                'enojado': 'Enojado'
+            };
+            return labels[mood] || 'Neutral';
+        }
+
+        function analizarEstadoAnimo() {
+            const rondasConMood = rondas.filter(r => r.estadoAnimo);
+            const distribution = {};
+            
+            rondasConMood.forEach(ronda => {
+                if (!distribution[ronda.estadoAnimo]) {
+                    distribution[ronda.estadoAnimo] = {
+                        count: 0,
+                        totalScore: 0,
+                        emoji: getMoodEmoji(ronda.estadoAnimo),
+                        label: getMoodLabel(ronda.estadoAnimo)
+                    };
+                }
+                distribution[ronda.estadoAnimo].count++;
+                distribution[ronda.estadoAnimo].totalScore += ronda.score;
+            });
+
+            // Calcular promedios
+            Object.keys(distribution).forEach(mood => {
+                distribution[mood].avgScore = (distribution[mood].totalScore / distribution[mood].count).toFixed(1);
+            });
+
+            // Generar insights
+            const insights = [];
+            const moodEntries = Object.entries(distribution);
+            
+            if (moodEntries.length > 0) {
+                // Encontrar el mejor y peor estado de ánimo por score
+                const bestMood = moodEntries.reduce((a, b) => 
+                    parseFloat(a[1].avgScore) < parseFloat(b[1].avgScore) ? a : b
+                );
+                const worstMood = moodEntries.reduce((a, b) => 
+                    parseFloat(a[1].avgScore) > parseFloat(b[1].avgScore) ? a : b
+                );
+
+                if (bestMood[0] !== worstMood[0]) {
+                    insights.push(`🏆 Juegas mejor cuando te sientes ${bestMood[1].label.toLowerCase()} (promedio: ${bestMood[1].avgScore})`);
+                    insights.push(`⚠️ Tu peor rendimiento es cuando te sientes ${worstMood[1].label.toLowerCase()} (promedio: ${worstMood[1].avgScore})`);
+                }
+
+                // Estadística de estados positivos vs negativos
+                const positiveCount = (distribution['muy-feliz']?.count || 0) + (distribution['feliz']?.count || 0);
+                const negativeCount = (distribution['frustrado']?.count || 0) + (distribution['enojado']?.count || 0);
+                const neutralCount = distribution['neutral']?.count || 0;
+
+                if (positiveCount > negativeCount) {
+                    insights.push(`😊 Generalmente mantienes un buen estado de ánimo (${positiveCount} rondas positivas vs ${negativeCount} negativas)`);
+                } else if (negativeCount > positiveCount) {
+                    insights.push(`🤔 Considera trabajar en el manejo emocional (${negativeCount} rondas negativas vs ${positiveCount} positivas)`);
+                }
+
+                if (insights.length === 0) {
+                    insights.push('📊 Sigue registrando tu estado de ánimo para obtener más insights');
+                }
+            }
+
+            return { distribution, insights };
+        }
+
         function switchTab(tabName, tabElement) {
             // Ocultar todos los contenidos
             document.querySelectorAll('.content').forEach(content => {
@@ -966,6 +1189,7 @@
             const companeros = document.getElementById('companeros').value;
             const enlace = document.getElementById('enlace').value;
             const observaciones = document.getElementById('observaciones').value;
+            const estadoAnimo = document.getElementById('estadoAnimo').value;
             
             if (!fecha || !campo) {
                 alert('Por favor completa los campos obligatorios (Fecha y Campo)');
@@ -981,6 +1205,7 @@
                 companeros,
                 enlace,
                 observaciones,
+                estadoAnimo,
                 hoyos: []
             };
 
@@ -1054,8 +1279,14 @@
             document.getElementById('companeros').value = '';
             document.getElementById('enlace').value = '';
             document.getElementById('observaciones').value = '';
+            document.getElementById('estadoAnimo').value = '';
             document.getElementById('foto').value = '';
             document.getElementById('photo-preview').style.display = 'none';
+            
+            // Limpiar selección de estado de ánimo
+            document.querySelectorAll('.mood-option').forEach(option => {
+                option.classList.remove('selected');
+            });
             
             for (let i = 1; i <= 18; i++) {
                 document.getElementById(`score-${i}`).value = 4;
@@ -1105,6 +1336,148 @@
             const promedioScore = (totalScore / totalRondas).toFixed(1);
             const porcentajeFairways = totalFairwaysPosibles > 0 ? ((totalFairwaysAcertados / totalFairwaysPosibles) * 100).toFixed(1) : 0;
             const porcentajeGIR = ((totalGIR / totalHoyos) * 100).toFixed(1);
+            const promedioPutts = (totalPutts / totalHoyos).toFixed(2);
+            const porcentajeUpDown = ((totalUpDown / totalHoyos) * 100).toFixed(1);
+
+            reporte += `ESTADÍSTICAS GENERALES:\n`;
+            reporte += `- Rondas jugadas: ${totalRondas}\n`;
+            reporte += `- Score promedio: ${promedioScore}\n`;
+            reporte += `- Fairways: ${porcentajeFairways}% (${totalFairwaysAcertados}/${totalFairwaysPosibles}) *Solo par 4 y 5\n`;
+            reporte += `- GIR: ${porcentajeGIR}% (${totalGIR}/${totalHoyos})\n`;
+            reporte += `- Putts por hoyo: ${promedioPutts}\n`;
+            reporte += `- Up & Down: ${porcentajeUpDown}% (${totalUpDown}/${totalHoyos})\n\n`;
+
+            // Análisis de tendencias direccionales
+            let fairwayFallas = { left: 0, right: 0 };
+            let girFallas = { short: 0, long: 0, left: 0, right: 0 };
+            
+            rondas.forEach(ronda => {
+                if (ronda.hoyos) {
+                    ronda.hoyos.forEach(hoyo => {
+                        if (hoyo.fairwayDirection) {
+                            fairwayFallas[hoyo.fairwayDirection] = (fairwayFallas[hoyo.fairwayDirection] || 0) + 1;
+                        }
+                        if (hoyo.girDirection) {
+                            girFallas[hoyo.girDirection] = (girFallas[hoyo.girDirection] || 0) + 1;
+                        }
+                    });
+                }
+            });
+
+            reporte += `ANÁLISIS DE TENDENCIAS:\n`;
+            reporte += `Fairways fallados:\n`;
+            reporte += `- Izquierda: ${fairwayFallas.left || 0} veces\n`;
+            reporte += `- Derecha: ${fairwayFallas.right || 0} veces\n`;
+            reporte += `\nGIR fallados:\n`;
+            reporte += `- Corto: ${girFallas.short || 0} veces\n`;
+            reporte += `- Largo: ${girFallas.long || 0} veces\n`;
+            reporte += `- Izquierda: ${girFallas.left || 0} veces\n`;
+            reporte += `- Derecha: ${girFallas.right || 0} veces\n\n`;
+
+            if (Object.keys(metas).length > 0) {
+                reporte += `METAS ESTABLECIDAS:\n`;
+                if (metas.score) reporte += `- Score objetivo: ${metas.score}\n`;
+                if (metas.fairways) reporte += `- Fairways objetivo: ${metas.fairways}%\n`;
+                if (metas.gir) reporte += `- GIR objetivo: ${metas.gir}%\n`;
+                if (metas.putts) reporte += `- Putts objetivo: ${metas.putts} por hoyo\n`;
+                if (metas.objetivo) reporte += `- Objetivo del mes: ${metas.objetivo}\n`;
+                reporte += `\n`;
+            }
+
+            reporte += `ANÁLISIS DE ESTADO DE ÁNIMO:\n`;
+            reporte += `=====================================\n`;
+            
+            const rondasConMood = rondas.filter(r => r.estadoAnimo);
+            if (rondasConMood.length > 0) {
+                const moodAnalysis = analizarEstadoAnimo();
+                
+                reporte += `Distribución de estados de ánimo:\n`;
+                Object.entries(moodAnalysis.distribution).forEach(([mood, data]) => {
+                    reporte += `- ${data.emoji} ${data.label}: ${data.count} rondas (promedio score: ${data.avgScore})\n`;
+                });
+                
+                reporte += `\nInsights del estado de ánimo:\n`;
+                moodAnalysis.insights.forEach((insight, index) => {
+                    reporte += `${index + 1}. ${insight.replace(/🏆|⚠️|😊|🤔|📊/g, '')}\n`;
+                });
+            } else {
+                reporte += `No hay datos de estado de ánimo registrados aún.\n`;
+            }
+            reporte += `\n`;
+
+            reporte += `HISTORIAL DE RONDAS:\n`;
+            reporte += `=====================================\n`;
+            
+            const rondasOrdenadas = [...rondas].sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+            
+            rondasOrdenadas.forEach((ronda, index) => {
+                let fairwaysAcertados = 0;
+                let fairwaysPosibles = 0;
+                let girs = 0;
+                let putts = 0;
+                let updowns = 0;
+                
+                if (ronda.hoyos) {
+                    ronda.hoyos.forEach(h => {
+                        if (h.esFairwayHole || (h.par === 4 || h.par === 5)) {
+                            fairwaysPosibles++;
+                            if (h.fairway) fairwaysAcertados++;
+                        }
+                        if (h.gir) girs++;
+                        putts += h.putts || 0;
+                        if (h.updown) updowns++;
+                    });
+                }
+
+                reporte += `${index + 1}. ${new Date(ronda.fecha).toLocaleDateString('es-ES')} - ${ronda.campo}\n`;
+                reporte += `   Tipo: ${ronda.tipo} | Score: ${ronda.score}\n`;
+                if (ronda.estadoAnimo) reporte += `   Estado de ánimo: ${getMoodEmoji(ronda.estadoAnimo)} ${getMoodLabel(ronda.estadoAnimo)}\n`;
+                if (ronda.nombreTorneo) reporte += `   Torneo: ${ronda.nombreTorneo}\n`;
+                if (ronda.companeros) reporte += `   Compañeros: ${ronda.companeros}\n`;
+                reporte += `   Fairways: ${fairwaysAcertados}/${fairwaysPosibles} (${fairwaysPosibles > 0 ? ((fairwaysAcertados/fairwaysPosibles)*100).toFixed(1) : 0}%)\n`;
+                reporte += `   GIR: ${girs}/18 (${((girs/18)*100).toFixed(1)}%)\n`;
+                reporte += `   Putts: ${putts} (${putts > 0 ? (putts/18).toFixed(1) : '0'} promedio)\n`;
+                reporte += `   Up & Down: ${updowns}/18 (${((updowns/18)*100).toFixed(1)}%)\n`;
+                if (ronda.observaciones) reporte += `   Observaciones: ${ronda.observaciones}\n`;
+                if (ronda.enlace) reporte += `   Resultados: ${ronda.enlace}\n`;
+                reporte += `\n`;
+            });
+
+            reporte += `\nNOTA: Los fairways solo se cuentan en hoyos par 4 y par 5.\n`;
+            reporte += `Dashboard incluye análisis emocional para correlacionar estado de ánimo con rendimiento.\n`;
+            reporte += `Dashboard local - datos guardados en el navegador.\n`;
+
+            const blob = new Blob([reporte], { type: 'text/plain;charset=utf-8' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Reporte_Golf_Alonso_${new Date().toISOString().split('T')[0]}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+
+            alert('📤 Reporte exportado con análisis de estado de ánimo y tendencias direccionales!');
+        }
+
+        function mostrarFoto(src) {
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+                background: rgba(0,0,0,0.8); display: flex; justify-content: center; 
+                align-items: center; z-index: 1000; cursor: pointer;
+            `;
+            modal.innerHTML = `<img src="${src}" style="max-width: 90%; max-height: 90%; border-radius: 10px;">`;
+            modal.onclick = () => document.body.removeChild(modal);
+            document.body.appendChild(modal);
+        }
+    </script>
+</body>
+</html>
+
+            const promedioScore = (totalScore / totalRondas).toFixed(1);
+            const porcentajeFairways = totalFairwaysPosibles > 0 ? ((totalFairwaysAcertados / totalFairwaysPosibles) * 100).toFixed(1) : 0;
+            const porcentajeGIR = ((totalGIR / totalHoyos) * 100).toFixed(1);
             const promedioPutts = (totalPutts / totalHoyos).toFixed(1);
             const porcentajeUpDown = ((totalUpDown / totalHoyos) * 100).toFixed(1);
 
@@ -1134,6 +1507,31 @@
                     <div class="stat-label">Rondas Jugadas</div>
                 </div>
             `;
+
+            // Agregar análisis de estado de ánimo
+            if (rondas.some(r => r.estadoAnimo)) {
+                const moodAnalysis = analizarEstadoAnimo();
+                statsDiv.innerHTML += `
+                    <div class="mood-analysis">
+                        <h3 style="color: #6c5ce7; margin-bottom: 15px;">🧠 Análisis de Estado de Ánimo</h3>
+                        <div class="mood-stats">
+                            ${Object.entries(moodAnalysis.distribution).map(([mood, data]) => `
+                                <div class="mood-stat-card">
+                                    <div class="mood-stat-emoji">${data.emoji}</div>
+                                    <div style="font-weight: bold;">${data.count} rondas</div>
+                                    <div style="font-size: 0.8em; opacity: 0.9;">Promedio: ${data.avgScore}</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <div style="margin-top: 15px; padding: 15px; background: white; border-radius: 8px;">
+                            <strong>💡 Insights:</strong><br>
+                            <div style="margin-top: 8px; color: #333;">
+                                ${moodAnalysis.insights.join('<br>')}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
         }
 
         function mostrarHistorial() {
@@ -1174,6 +1572,7 @@
                         <div>
                             <strong>${new Date(ronda.fecha).toLocaleDateString('es-ES')}</strong> - ${ronda.campo}
                             ${ronda.tipo === 'torneo' ? '<span class="tournament-badge">TORNEO</span>' : ''}
+                            ${ronda.estadoAnimo ? `<span class="mood-badge">${getMoodEmoji(ronda.estadoAnimo)} ${getMoodLabel(ronda.estadoAnimo)}</span>` : ''}
                             ${ronda.nombreTorneo ? `<br><em style="color: #666; font-size: 0.9em;">🏆 ${ronda.nombreTorneo}</em>` : ''}
                         </div>
                         <div style="font-size: 1.5em; font-weight: bold; color: #1e3c72;">
@@ -1252,128 +1651,3 @@
                             totalFairwaysPosibles++;
                             if (hoyo.fairway) totalFairwaysAcertados++;
                         }
-                        if (hoyo.gir) totalGIR++;
-                        totalPutts += hoyo.putts || 0;
-                        if (hoyo.updown) totalUpDown++;
-                    });
-                }
-            });
-
-            const promedioScore = (totalScore / totalRondas).toFixed(1);
-            const porcentajeFairways = totalFairwaysPosibles > 0 ? ((totalFairwaysAcertados / totalFairwaysPosibles) * 100).toFixed(1) : 0;
-            const porcentajeGIR = ((totalGIR / totalHoyos) * 100).toFixed(1);
-            const promedioPutts = (totalPutts / totalHoyos).toFixed(2);
-            const porcentajeUpDown = ((totalUpDown / totalHoyos) * 100).toFixed(1);
-
-            reporte += `ESTADÍSTICAS GENERALES:\n`;
-            reporte += `- Rondas jugadas: ${totalRondas}\n`;
-            reporte += `- Score promedio: ${promedioScore}\n`;
-            reporte += `- Fairways: ${porcentajeFairways}% (${totalFairwaysAcertados}/${totalFairwaysPosibles}) *Solo par 4 y 5\n`;
-            reporte += `- GIR: ${porcentajeGIR}% (${totalGIR}/${totalHoyos})\n`;
-            reporte += `- Putts por hoyo: ${promedioPutts}\n`;
-            reporte += `- Up & Down: ${porcentajeUpDown}% (${totalUpDown}/${totalHoyos})\n\n`;
-
-            // Análisis de tendencias direccionales
-            let fairwayFallas = { left: 0, right: 0 };
-            let girFallas = { short: 0, long: 0, left: 0, right: 0 };
-            
-            rondas.forEach(ronda => {
-                if (ronda.hoyos) {
-                    ronda.hoyos.forEach(hoyo => {
-                        if (hoyo.fairwayDirection) {
-                            fairwayFallas[hoyo.fairwayDirection] = (fairwayFallas[hoyo.fairwayDirection] || 0) + 1;
-                        }
-                        if (hoyo.girDirection) {
-                            girFallas[hoyo.girDirection] = (girFallas[hoyo.girDirection] || 0) + 1;
-                        }
-                    });
-                }
-            });
-
-            reporte += `ANÁLISIS DE TENDENCIAS:\n`;
-            reporte += `Fairways fallados:\n`;
-            reporte += `- Izquierda: ${fairwayFallas.left || 0} veces\n`;
-            reporte += `- Derecha: ${fairwayFallas.right || 0} veces\n`;
-            reporte += `\nGIR fallados:\n`;
-            reporte += `- Corto: ${girFallas.short || 0} veces\n`;
-            reporte += `- Largo: ${girFallas.long || 0} veces\n`;
-            reporte += `- Izquierda: ${girFallas.left || 0} veces\n`;
-            reporte += `- Derecha: ${girFallas.right || 0} veces\n\n`;
-
-            if (Object.keys(metas).length > 0) {
-                reporte += `METAS ESTABLECIDAS:\n`;
-                if (metas.score) reporte += `- Score objetivo: ${metas.score}\n`;
-                if (metas.fairways) reporte += `- Fairways objetivo: ${metas.fairways}%\n`;
-                if (metas.gir) reporte += `- GIR objetivo: ${metas.gir}%\n`;
-                if (metas.putts) reporte += `- Putts objetivo: ${metas.putts} por hoyo\n`;
-                if (metas.objetivo) reporte += `- Objetivo del mes: ${metas.objetivo}\n`;
-                reporte += `\n`;
-            }
-
-            reporte += `HISTORIAL DE RONDAS:\n`;
-            reporte += `=====================================\n`;
-            
-            const rondasOrdenadas = [...rondas].sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
-            
-            rondasOrdenadas.forEach((ronda, index) => {
-                let fairwaysAcertados = 0;
-                let fairwaysPosibles = 0;
-                let girs = 0;
-                let putts = 0;
-                let updowns = 0;
-                
-                if (ronda.hoyos) {
-                    ronda.hoyos.forEach(h => {
-                        if (h.esFairwayHole || (h.par === 4 || h.par === 5)) {
-                            fairwaysPosibles++;
-                            if (h.fairway) fairwaysAcertados++;
-                        }
-                        if (h.gir) girs++;
-                        putts += h.putts || 0;
-                        if (h.updown) updowns++;
-                    });
-                }
-
-                reporte += `${index + 1}. ${new Date(ronda.fecha).toLocaleDateString('es-ES')} - ${ronda.campo}\n`;
-                reporte += `   Tipo: ${ronda.tipo} | Score: ${ronda.score}\n`;
-                if (ronda.nombreTorneo) reporte += `   Torneo: ${ronda.nombreTorneo}\n`;
-                if (ronda.companeros) reporte += `   Compañeros: ${ronda.companeros}\n`;
-                reporte += `   Fairways: ${fairwaysAcertados}/${fairwaysPosibles} (${fairwaysPosibles > 0 ? ((fairwaysAcertados/fairwaysPosibles)*100).toFixed(1) : 0}%)\n`;
-                reporte += `   GIR: ${girs}/18 (${((girs/18)*100).toFixed(1)}%)\n`;
-                reporte += `   Putts: ${putts} (${putts > 0 ? (putts/18).toFixed(1) : '0'} promedio)\n`;
-                reporte += `   Up & Down: ${updowns}/18 (${((updowns/18)*100).toFixed(1)}%)\n`;
-                if (ronda.observaciones) reporte += `   Observaciones: ${ronda.observaciones}\n`;
-                if (ronda.enlace) reporte += `   Resultados: ${ronda.enlace}\n`;
-                reporte += `\n`;
-            });
-
-            reporte += `\nNOTA: Los fairways solo se cuentan en hoyos par 4 y par 5.\n`;
-            reporte += `Dashboard local - datos guardados en el navegador.\n`;
-
-            const blob = new Blob([reporte], { type: 'text/plain;charset=utf-8' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `Reporte_Golf_Alonso_${new Date().toISOString().split('T')[0]}.txt`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            window.URL.revokeObjectURL(url);
-
-            alert('📤 Reporte exportado con análisis de tendencias direccionales!');
-        }
-
-        function mostrarFoto(src) {
-            const modal = document.createElement('div');
-            modal.style.cssText = `
-                position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-                background: rgba(0,0,0,0.8); display: flex; justify-content: center; 
-                align-items: center; z-index: 1000; cursor: pointer;
-            `;
-            modal.innerHTML = `<img src="${src}" style="max-width: 90%; max-height: 90%; border-radius: 10px;">`;
-            modal.onclick = () => document.body.removeChild(modal);
-            document.body.appendChild(modal);
-        }
-    </script>
-</body>
-</html>
